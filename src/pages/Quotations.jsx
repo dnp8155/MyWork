@@ -9,10 +9,11 @@ import EmptyState from "@/components/EmptyState";
 import Modal from "@/components/Modal";
 import { Input, Select, Textarea } from "@/components/FormFields";
 import { Plus, FileText, CheckCircle2, XCircle, FileCheck } from "lucide-react";
+import Watermark from "@/components/Watermark";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Quotations() {
-  const { quotations, clients, projects, invoices, loading, refresh } = useAppData();
+  const { quotations, clients, projects, invoices, settings, loading, refresh } = useAppData();
   const [modalOpen, setModalOpen] = useState(false);
   const [filter, setFilter] = useState("all");
   const [viewQuote, setViewQuote] = useState(null);
@@ -109,7 +110,7 @@ export default function Quotations() {
         </div>
       )}
       {modalOpen && <QuoteForm clients={clients || []} projects={projects || []} existing={quotations || []} onClose={() => setModalOpen(false)} onSaved={() => { setModalOpen(false); refresh(); toast({ title: "Quotation created" }); }} />}
-      {viewQuote && <QuoteView quote={viewQuote} onClose={() => setViewQuote(null)} onApprove={() => { approve(viewQuote); setViewQuote(null); }} onConvert={() => convert(viewQuote)} />}
+      {viewQuote && <QuoteView quote={viewQuote} settings={settings} onClose={() => setViewQuote(null)} onApprove={() => { approve(viewQuote); setViewQuote(null); }} onConvert={() => convert(viewQuote)} />}
     </div>
   );
 }
@@ -186,10 +187,11 @@ function QuoteForm({ clients, projects, existing, onClose, onSaved }) {
   );
 }
 
-function QuoteView({ quote, onClose, onApprove, onConvert }) {
+function QuoteView({ quote, settings, onClose, onApprove, onConvert }) {
   return (
     <Modal open onClose={onClose} title={`Quotation ${quote.quotation_number}`} size="lg">
-      <div className="space-y-4">
+      <div className="relative space-y-4">
+        <Watermark logo={settings?.logo} />
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div><p className="text-xs text-slate-400">Client</p><p className="font-medium">{quote.client_name}</p></div>
           <div><p className="text-xs text-slate-400">Date</p><p className="font-medium">{quote.date}</p></div>

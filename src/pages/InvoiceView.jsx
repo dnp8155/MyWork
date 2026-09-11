@@ -4,6 +4,7 @@ import { useAppData } from "@/hooks/useAppData";
 import { computeInvoiceFinancials, formatCurrency } from "@/lib/finance";
 import { Image } from "@/components/ui/image";
 import { ArrowLeft, Printer } from "lucide-react";
+import Watermark from "@/components/Watermark";
 
 const numberToWords = (n) => {
   n = Math.round(Number(n) || 0);
@@ -49,7 +50,8 @@ export default function InvoiceView() {
         </button>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-8 max-w-3xl mx-auto print:border-0 print:rounded-none">
+      <div className="relative bg-white border border-slate-200 rounded-xl p-8 max-w-3xl mx-auto print:border-0 print:rounded-none overflow-hidden">
+        <Watermark logo={company.logo} />
         {/* Header */}
         <div className="flex justify-between items-start gap-6 pb-6 border-b-2 border-slate-900">
           <div className="flex items-start gap-3">
