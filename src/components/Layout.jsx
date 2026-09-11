@@ -43,17 +43,19 @@ export default function Layout() {
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-200 ${
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-200 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        <div className="h-16 flex items-center px-5 border-b border-slate-800">
-          <Image
-            src="https://media.base44.com/images/public/6aa4049391d33a443027588d/9dbdc9e2e_ChatGPTImageSep11202607_28_47PM.png"
-            fittingType="fit"
-            className="h-10 w-36"
-            alt="MeWork"
-          />
+        <div className="h-16 flex items-center px-5 border-b border-slate-200">
+          <div className="flex h-10 w-36 items-center justify-center rounded-lg bg-slate-900 overflow-hidden">
+            <Image
+              src="https://media.base44.com/images/public/6aa4049391d33a443027588d/9dbdc9e2e_ChatGPTImageSep11202607_28_47PM.png"
+              fittingType="fit"
+              className="h-10 w-36"
+              alt="MeWork"
+            />
+          </div>
         </div>
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
           {navItems.map((item) => (
@@ -66,7 +68,7 @@ export default function Layout() {
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-indigo-600 text-white"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
                 }`
               }
             >
@@ -75,16 +77,16 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
-        <div className="p-3 border-t border-slate-800">
+        <div className="p-3 border-t border-slate-200">
           <div className="flex items-center gap-3 px-2 py-2">
-            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white text-xs font-semibold">
+            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-semibold">
               {user?.full_name?.charAt(0) || "U"}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs text-white truncate">{user?.full_name || "User"}</div>
+              <div className="text-xs text-slate-900 truncate">{user?.full_name || "User"}</div>
               <div className="text-[10px] text-slate-500 capitalize">{user?.role || "admin"}</div>
             </div>
-            <button onClick={handleLogout} className="text-slate-500 hover:text-white">
+            <button onClick={handleLogout} className="text-slate-400 hover:text-slate-900">
               <LogOut className="w-4 h-4" />
             </button>
           </div>

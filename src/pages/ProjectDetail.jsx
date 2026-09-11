@@ -19,8 +19,6 @@ import {
 const TABS = [
   { key: "overview", label: "Overview" },
   { key: "financial", label: "Financial" },
-  { key: "payments", label: "Payments" },
-  { key: "expenses", label: "Expenses" },
   { key: "quotations", label: "Quotations" },
   { key: "invoices", label: "Invoices" },
   { key: "domain", label: "Domain" },
@@ -147,18 +145,80 @@ export default function ProjectDetail() {
       )}
 
       {tab === "financial" && (
-        <div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <p className="text-sm text-slate-500">Complete money tracking — total value, received, remaining, expenses and profit in one place.</p>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPayModal(true)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                <Plus className="w-4 h-4" /> Record Payment
+              </button>
+              <button onClick={() => setExpenseModal(true)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
+                <Plus className="w-4 h-4" /> Add Expense
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="Total Value" value={f.value} icon={Wallet} tone="indigo" />
             <StatCard label="Received" value={f.received} icon={TrendingUp} tone="green" />
-            <StatCard label="Pending" value={f.pending} icon={Clock} tone="amber" />
+            <StatCard label="Pending / Remaining" value={f.pending} icon={Clock} tone="amber" />
             <StatCard label="Expenses" value={f.expenses} icon={TrendingDown} tone="red" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <StatCard label="Profit" value={f.profit} icon={TrendingUp} tone={f.profit >= 0 ? "green" : "red"} />
             <StatCard label="Profit Margin" value={`${f.margin.toFixed(1)}%`} icon={Percent} tone="indigo" isCurrency={false} />
           </div>
-          <div className="mt-4 bg-white rounded-xl border border-slate-200 p-4">
+
+          <Section title="Payment History">
+            {projectPayments.length === 0 ? <p className="text-sm text-slate-400">No payments recorded yet.</p> : (
+              <div className="overflow-x-auto"><table className="w-full text-sm">
+                <thead className="bg-slate-50"><tr>
+                  <th className="text-left px-3 py-2 font-medium text-slate-600">Date</th>
+                  <th className="text-left px-3 py-2 font-medium text-slate-600">Number</th>
+                  <th className="text-left px-3 py-2 font-medium text-slate-600">Method</th>
+                  <th className="text-left px-3 py-2 font-medium text-slate-600">Reference</th>
+                  <th className="text-right px-3 py-2 font-medium text-slate-600">Amount</th>
+                </tr></thead>
+                <tbody className="divide-y divide-slate-100">
+                  {projectPayments.map((p) => (
+                    <tr key={p.id}>
+                      <td className="px-3 py-2">{p.date}</td>
+                      <td className="px-3 py-2 text-slate-500">{p.payment_number}</td>
+                      <td className="px-3 py-2 capitalize">{p.payment_method?.replace("_", " ")}</td>
+                      <td className="px-3 py-2 text-slate-500">{p.reference || "—"}</td>
+                      <td className="px-3 py-2 text-right text-emerald-600 font-medium">{formatCurrency(p.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table></div>
+            )}
+          </Section>
+
+          <Section title="Expenses">
+            {projectExpenses.length === 0 ? <p className="text-sm text-slate-400">No expenses recorded.</p> : (
+              <div className="overflow-x-auto"><table className="w-full text-sm">
+                <thead className="bg-slate-50"><tr>
+                  <th className="text-left px-3 py-2 font-medium text-slate-600">Date</th>
+                  <th className="text-left px-3 py-2 font-medium text-slate-600">Category</th>
+                  <th className="text-left px-3 py-2 font-medium text-slate-600">Description</th>
+                  <th className="text-left px-3 py-2 font-medium text-slate-600">Source</th>
+                  <th className="text-right px-3 py-2 font-medium text-slate-600">Amount</th>
+                </tr></thead>
+                <tbody className="divide-y divide-slate-100">
+                  {projectExpenses.map((e) => (
+                    <tr key={e.id}>
+                      <td className="px-3 py-2">{e.date}</td>
+                      <td className="px-3 py-2 capitalize">{e.category}</td>
+                      <td className="px-3 py-2 text-slate-600">{e.description || "—"}</td>
+                      <td className="px-3 py-2"><span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600">{e.source}</span></td>
+                      <td className="px-3 py-2 text-right text-rose-600 font-medium">{formatCurrency(e.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table></div>
+            )}
+          </Section>
+
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
             <h3 className="text-sm font-semibold text-slate-700 mb-3">Expense Breakdown</h3>
             {projectExpenses.length === 0 ? <p className="text-sm text-slate-400">No expenses recorded.</p> : (
               <div className="space-y-2">
@@ -172,60 +232,6 @@ export default function ProjectDetail() {
             )}
           </div>
         </div>
-      )}
-
-      {tab === "payments" && (
-        <Section title="Payment History" action={<button onClick={() => setPayModal(true)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg"><Plus className="w-4 h-4" /> Record Payment</button>}>
-          {projectPayments.length === 0 ? <p className="text-sm text-slate-400">No payments recorded yet.</p> : (
-            <div className="overflow-x-auto"><table className="w-full text-sm">
-              <thead className="bg-slate-50"><tr>
-                <th className="text-left px-3 py-2 font-medium text-slate-600">Date</th>
-                <th className="text-left px-3 py-2 font-medium text-slate-600">Number</th>
-                <th className="text-left px-3 py-2 font-medium text-slate-600">Method</th>
-                <th className="text-left px-3 py-2 font-medium text-slate-600">Reference</th>
-                <th className="text-right px-3 py-2 font-medium text-slate-600">Amount</th>
-              </tr></thead>
-              <tbody className="divide-y divide-slate-100">
-                {projectPayments.map((p) => (
-                  <tr key={p.id}>
-                    <td className="px-3 py-2">{p.date}</td>
-                    <td className="px-3 py-2 text-slate-500">{p.payment_number}</td>
-                    <td className="px-3 py-2 capitalize">{p.payment_method?.replace("_", " ")}</td>
-                    <td className="px-3 py-2 text-slate-500">{p.reference || "—"}</td>
-                    <td className="px-3 py-2 text-right text-emerald-600 font-medium">{formatCurrency(p.amount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table></div>
-          )}
-        </Section>
-      )}
-
-      {tab === "expenses" && (
-        <Section title="Project Expenses" action={<button onClick={() => setExpenseModal(true)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg"><Plus className="w-4 h-4" /> Add Expense</button>}>
-          {projectExpenses.length === 0 ? <p className="text-sm text-slate-400">No expenses recorded.</p> : (
-            <div className="overflow-x-auto"><table className="w-full text-sm">
-              <thead className="bg-slate-50"><tr>
-                <th className="text-left px-3 py-2 font-medium text-slate-600">Date</th>
-                <th className="text-left px-3 py-2 font-medium text-slate-600">Category</th>
-                <th className="text-left px-3 py-2 font-medium text-slate-600">Description</th>
-                <th className="text-left px-3 py-2 font-medium text-slate-600">Source</th>
-                <th className="text-right px-3 py-2 font-medium text-slate-600">Amount</th>
-              </tr></thead>
-              <tbody className="divide-y divide-slate-100">
-                {projectExpenses.map((e) => (
-                  <tr key={e.id}>
-                    <td className="px-3 py-2">{e.date}</td>
-                    <td className="px-3 py-2 capitalize">{e.category}</td>
-                    <td className="px-3 py-2 text-slate-600">{e.description || "—"}</td>
-                    <td className="px-3 py-2"><span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600">{e.source}</span></td>
-                    <td className="px-3 py-2 text-right text-rose-600 font-medium">{formatCurrency(e.amount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table></div>
-          )}
-        </Section>
       )}
 
       {tab === "quotations" && (
