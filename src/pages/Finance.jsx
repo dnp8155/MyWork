@@ -9,7 +9,7 @@ import {
 } from "recharts";
 import { Wallet, TrendingUp, TrendingDown, Clock, AlertTriangle, CalendarClock } from "lucide-react";
 
-const PIE_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#0ea5e9", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#64748b"];
+const PIE_COLORS = ["#003f7e", "#0054ab", "#007bff", "#4fa3ff", "#8ec2ff", "#bcd9ff", "#64748b", "#94a3b8", "#cbd5e1", "#013057"];
 
 export default function Finance() {
   const { payments, expenses, projects, invoices, loading } = useAppData();
@@ -64,19 +64,19 @@ export default function Finance() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <ChartCard title="Revenue vs Expenses vs Profit (6 months)">
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={combined}><CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" /><XAxis dataKey="month" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} /><Tooltip formatter={(v) => formatCurrency(v)} /><Legend /><Bar dataKey="Revenue" fill="#10b981" radius={[4, 4, 0, 0]} /><Bar dataKey="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} /><Bar dataKey="Profit" fill="#6366f1" radius={[4, 4, 0, 0]} /></BarChart>
+            <BarChart data={combined}><CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" /><XAxis dataKey="month" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} /><Tooltip formatter={(v) => formatCurrency(v)} /><Legend /><Bar dataKey="Revenue" fill="#007bff" radius={[4, 4, 0, 0]} /><Bar dataKey="Expenses" fill="#cbd5e1" radius={[4, 4, 0, 0]} /><Bar dataKey="Profit" fill="#003f7e" radius={[4, 4, 0, 0]} /></BarChart>
           </ResponsiveContainer>
         </ChartCard>
         <ChartCard title="Monthly Cash Flow">
           <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={combined}><CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" /><XAxis dataKey="month" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} /><Tooltip formatter={(v) => formatCurrency(v)} /><Legend /><Area type="monotone" dataKey="Revenue" stroke="#10b981" fill="#10b98133" /><Area type="monotone" dataKey="Expenses" stroke="#ef4444" fill="#ef444433" /></AreaChart>
+            <AreaChart data={combined}><CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" /><XAxis dataKey="month" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} /><Tooltip formatter={(v) => formatCurrency(v)} /><Legend /><Area type="monotone" dataKey="Revenue" stroke="#007bff" fill="#007bff22" /><Area type="monotone" dataKey="Expenses" stroke="#94a3b8" fill="#94a3b822" /></AreaChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <ChartCard title="Profit Trend">
           <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={combined}><CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" /><XAxis dataKey="month" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} /><Tooltip formatter={(v) => formatCurrency(v)} /><Line type="monotone" dataKey="Profit" stroke="#6366f1" strokeWidth={2.5} /></LineChart>
+            <LineChart data={combined}><CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" /><XAxis dataKey="month" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} /><Tooltip formatter={(v) => formatCurrency(v)} /><Line type="monotone" dataKey="Profit" stroke="#0054ab" strokeWidth={2.5} /></LineChart>
           </ResponsiveContainer>
         </ChartCard>
         <ChartCard title="Expense Category Breakdown">
@@ -87,7 +87,7 @@ export default function Finance() {
       </div>
       <ChartCard title="Project-wise Revenue & Expenses">
         <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={pwBreakdown} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" /><XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} /><YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} /><Tooltip formatter={(v) => formatCurrency(v)} /><Legend /><Bar dataKey="revenue" name="Revenue" fill="#10b981" stackId="a" /><Bar dataKey="expenses" name="Expenses" fill="#ef4444" stackId="a" /></BarChart>
+          <BarChart data={pwBreakdown} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" /><XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} /><YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} /><Tooltip formatter={(v) => formatCurrency(v)} /><Legend /><Bar dataKey="revenue" name="Revenue" fill="#007bff" stackId="a" /><Bar dataKey="expenses" name="Expenses" fill="#cbd5e1" stackId="a" /></BarChart>
         </ResponsiveContainer>
       </ChartCard>
     </div>

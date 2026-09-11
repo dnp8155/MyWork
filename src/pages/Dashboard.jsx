@@ -13,7 +13,7 @@ import {
   LineChart, Line, PieChart, Pie, Cell, Legend,
 } from "recharts";
 
-const PIE_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#0ea5e9", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#64748b"];
+const PIE_COLORS = ["#003f7e", "#0054ab", "#007bff", "#4fa3ff", "#8ec2ff", "#bcd9ff", "#64748b", "#94a3b8", "#cbd5e1", "#013057"];
 
 export default function Dashboard() {
   const { projects, payments, expenses, invoices, quotations, domains, hosting, loading } = useAppData();
@@ -93,9 +93,9 @@ export default function Dashboard() {
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(v) => formatCurrency(v)} />
               <Legend />
-              <Bar dataKey="Revenue" fill="#10b981" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Profit" fill="#6366f1" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Revenue" fill="#007bff" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Expenses" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Profit" fill="#003f7e" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -120,8 +120,8 @@ export default function Dashboard() {
               <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={100} />
               <Tooltip formatter={(v) => formatCurrency(v)} />
               <Legend />
-              <Bar dataKey="revenue" name="Revenue" fill="#10b981" stackId="a" />
-              <Bar dataKey="expenses" name="Expenses" fill="#ef4444" stackId="a" />
+              <Bar dataKey="revenue" name="Revenue" fill="#007bff" stackId="a" />
+              <Bar dataKey="expenses" name="Expenses" fill="#cbd5e1" stackId="a" />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -132,7 +132,7 @@ export default function Dashboard() {
               <XAxis dataKey="month" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(v) => formatCurrency(v)} />
-              <Line type="monotone" dataKey="Profit" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="Profit" stroke="#0054ab" strokeWidth={2.5} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
