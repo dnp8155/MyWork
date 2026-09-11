@@ -46,14 +46,12 @@ export default function Layout() {
         }`}
       >
         <div className="h-16 flex items-center px-5 border-b border-slate-200">
-          <div className="flex h-10 w-36 items-center justify-center rounded-lg bg-slate-900 overflow-hidden">
-            <Image
-              src="https://media.base44.com/images/public/6aa4049391d33a443027588d/9dbdc9e2e_ChatGPTImageSep11202607_28_47PM.png"
-              fittingType="fit"
-              className="h-10 w-36"
-              alt="MeWork"
-            />
-          </div>
+          <Image
+            src="https://media.base44.com/images/public/6aa4049391d33a443027588d/3321c12ed_ChatGPTImageSep11202607_58_37PM.png"
+            fittingType="fit"
+            className="h-10 w-36"
+            alt="MeWork"
+          />
         </div>
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
           {navItems.map((item) => (
