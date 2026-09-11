@@ -8,48 +8,9 @@
     "account_email": {
       "type": "string"
     },
-    "account_identifier": {
+    "password": {
       "type": "string",
-      "description": "Login / workspace identifier (not password)"
-    },
-    "status": {
-      "type": "string",
-      "enum": [
-        "active",
-        "suspended",
-        "cancelled"
-      ],
-      "default": "active"
-    },
-    "plan": {
-      "type": "string"
-    },
-    "subscription_cost": {
-      "type": "number",
-      "default": 0
-    },
-    "billing_cycle": {
-      "type": "string",
-      "enum": [
-        "monthly",
-        "yearly",
-        "custom"
-      ],
-      "default": "monthly"
-    },
-    "start_date": {
-      "type": "string",
-      "format": "date"
-    },
-    "renewal_date": {
-      "type": "string",
-      "format": "date"
-    },
-    "notes": {
-      "type": "string"
-    },
-    "account_owner": {
-      "type": "string"
+      "description": "Account password"
     }
   },
   "required": [

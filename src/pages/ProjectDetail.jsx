@@ -272,12 +272,7 @@ export default function ProjectDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <Info label="Account Name" value={base44Account.account_name} />
               <Info label="Email" value={base44Account.account_email} />
-              <Info label="Plan" value={base44Account.plan} />
-              <Info label="Status" value={base44Account.status} />
-              <Info label="Subscription Cost" value={formatCurrency(base44Account.subscription_cost)} />
-              <Info label="Billing Cycle" value={base44Account.billing_cycle} />
-              <Info label="Workspace ID" value={project.base44_workspace_id} />
-              <Info label="Project URL" value={project.base44_project_url} />
+              <Info label="Password" value={base44Account.password} />
             </div>
           )}
         </Section>
