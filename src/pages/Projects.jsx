@@ -53,7 +53,9 @@ export default function Projects() {
           {filtered.map((p) => {
             const f = computeProjectFinancials(p, payments, expenses);
             return (
-              <div key={p.id} onClick={() => navigate(`/projects/${p.id}`)} className="aspect-square bg-white rounded-xl border border-slate-200 p-4 flex flex-col hover:border-slate-300 hover:shadow-sm transition cursor-pointer overflow-hidden">
+              <div key={p.id} className="relative pt-3">
+                <div className="absolute top-0 left-4 w-24 h-3 bg-white border border-slate-200 border-b-0 rounded-t-md" />
+                <div onClick={() => navigate(`/projects/${p.id}`)} className="aspect-square bg-white rounded-xl border border-slate-200 p-4 flex flex-col hover:border-slate-300 hover:shadow-sm transition cursor-pointer overflow-hidden">
                 <div className="relative -mx-4 -mt-4 mb-3 h-24 bg-slate-100 overflow-hidden">
                   {p.logo ? (
                     <Image src={p.logo} className="w-full h-full" fittingType="fill" />
@@ -74,6 +76,7 @@ export default function Projects() {
                   <span className={`text-xs px-2 py-0.5 rounded-full ${p.project_type === "recurring" ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-600"}`}>
                     {p.project_type === "recurring" ? "Recurring" : "Fixed"}
                   </span>
+                </div>
                 </div>
               </div>
             );
