@@ -10,8 +10,10 @@ import Modal from "@/components/Modal";
 import { Input, Select, Textarea } from "@/components/FormFields";
 import { useToast } from "@/components/ui/use-toast";
 import CredentialForm, { CATEGORY_STYLES } from "@/components/credentials/CredentialForm";
+import TeamSection from "@/components/projects/TeamSection";
+import DocumentsSection from "@/components/projects/DocumentsSection";
 import {
-  ArrowLeft, Wallet, TrendingUp, TrendingDown, Clock, Percent,
+  ArrowLeft, Wallet, TrendingUp, TrendingDown, Clock, Percent, Users,
   Plus, Globe, HardDrive, Server, FileText, Receipt, History,
   KeyRound, Eye, EyeOff, Pencil, Trash2,
 } from "lucide-react";
@@ -19,6 +21,8 @@ import {
 const TABS = [
   { key: "overview", label: "Overview" },
   { key: "financial", label: "Financial" },
+  { key: "team", label: "Team" },
+  { key: "documents", label: "Documents" },
   { key: "quotations", label: "Quotations" },
   { key: "invoices", label: "Invoices" },
   { key: "domain", label: "Domain" },
@@ -30,7 +34,7 @@ const TABS = [
 
 export default function ProjectDetail() {
   const { id } = useParams();
-  const { projects, clients, base44Accounts, credentials, payments, expenses, quotations, invoices, domains, hosting, recurringSchedules, auditLogs, loading, refresh } = useAppData();
+  const { projects, clients, base44Accounts, credentials, payments, expenses, quotations, invoices, domains, hosting, recurringSchedules, auditLogs, projectMembers, projectDocuments, loading, refresh } = useAppData();
   const [tab, setTab] = useState("overview");
   const [payModal, setPayModal] = useState(false);
   const [expenseModal, setExpenseModal] = useState(false);
@@ -70,7 +74,14 @@ export default function ProjectDetail() {
       <PageHeader
         title={project.name}
         subtitle={`${project.project_number} • ${project.client_name || "No client"} • ${project.project_type === "recurring" ? "Recurring" : "Fixed"}`}
-        actions={<StatusBadge status={project.status} />}
+        actions={
+          <div className="flex items-center gap-2">
+            <StatusBadge status={project.status} />
+            <Link to={`/projects/${id}/shared`} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
+              <Users className="w-4 h-4" /> Shared View
+            </Link>
+          </div>
+        }
       />
 
       {/* Tabs */}
@@ -232,6 +243,22 @@ export default function ProjectDetail() {
             )}
           </div>
         </div>
+      )}
+
+      {tab === "team" && (
+        <TeamSection
+          project={project}
+          members={(projectMembers || []).filter((m) => m.project_id === id && m.status !== "removed")}
+          onChanged={refresh}
+        />
+      )}
+
+      {tab === "documents" && (
+        <DocumentsSection
+          project={project}
+          documents={(projectDocuments || []).filter((d) => d.project_id === id)}
+          onChanged={refresh}
+        />
       )}
 
       {tab === "quotations" && (

@@ -15,6 +15,7 @@ async function fetchAll() {
       clients, base44Accounts, projects, payments, recurringSchedules,
       quotations, invoices, domains, hosting, expenses, transactions,
       notifications, auditLogs, settings, credentials,
+      projectMembers, projectDocuments,
     ] = await Promise.all([
       base44.entities.Client.list(),
       base44.entities.Base44Account.list(),
@@ -31,11 +32,13 @@ async function fetchAll() {
       base44.entities.AuditLog.list(),
       base44.entities.CompanySettings.list(),
       base44.entities.Credential.list(),
+      base44.entities.ProjectMember.list(),
+      base44.entities.ProjectDocument.list(),
     ]);
     cache.data = {
       clients, base44Accounts, projects, payments, recurringSchedules,
       quotations, invoices, domains, hosting, expenses, transactions,
-      notifications, auditLogs, credentials,
+      notifications, auditLogs, credentials, projectMembers, projectDocuments,
       settings: settings[0] || null,
     };
     cache.lastFetched = Date.now();

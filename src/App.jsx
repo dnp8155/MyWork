@@ -15,6 +15,7 @@ import ResetPassword from '@/pages/ResetPassword';
 import Dashboard from '@/pages/Dashboard';
 import Projects from '@/pages/Projects';
 import ProjectDetail from '@/pages/ProjectDetail';
+import SharedProject from '@/pages/SharedProject';
 import Clients from '@/pages/Clients';
 import ClientDetail from '@/pages/ClientDetail';
 import Base44Accounts from '@/pages/Base44Accounts';
@@ -65,6 +66,7 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
+          <Route path="/projects/:id/shared" element={<SharedProject />} />
           <Route path="/clients" element={<Clients />} />
           <Route path="/clients/:id" element={<ClientDetail />} />
           <Route path="/base44-accounts" element={<Base44Accounts />} />

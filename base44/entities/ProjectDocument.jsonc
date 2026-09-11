@@ -1,0 +1,36 @@
+{
+  "name": "ProjectDocument",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string"
+    },
+    "project_name": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "description": "Display name of the document"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original uploaded file name"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Public URL of the uploaded file"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "uploaded_by": {
+      "type": "string",
+      "description": "Name of the user who uploaded"
+    }
+  },
+  "required": [
+    "project_id",
+    "title",
+    "file_url"
+  ]
+}
