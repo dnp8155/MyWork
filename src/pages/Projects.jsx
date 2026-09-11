@@ -10,10 +10,7 @@ import ProjectCard from "@/components/projects/ProjectCard";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import StatusBadge from "@/components/StatusBadge";
-import {
-  Plus, Download, LayoutGrid, List as ListIcon,
-  FolderKanban, CheckCircle2, PauseCircle, Layers,
-} from "lucide-react";
+import { Plus, Download, LayoutGrid, List as ListIcon, FolderKanban } from "lucide-react";
 
 const TABS = [
   { key: "all", label: "All Projects" },
@@ -21,32 +18,6 @@ const TABS = [
   { key: "completed", label: "Completed" },
   { key: "on_hold", label: "On Hold" },
 ];
-
-function KpiCard({ title, value, sub, progress, icon: Icon }) {
-  return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-[0_1px_2px_rgba(16,24,40,0.04)] p-4">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-          <Icon className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <div className="text-xs text-slate-500 truncate">{title}</div>
-          <div className="text-xl font-bold text-slate-900 leading-tight">{value}</div>
-        </div>
-      </div>
-      {progress != null ? (
-        <div className="mt-3">
-          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-indigo-600 rounded-full transition-all" style={{ width: `${Math.min(progress, 100)}%` }} />
-          </div>
-          <div className="text-[11px] text-slate-400 mt-1">{sub}</div>
-        </div>
-      ) : (
-        <div className="text-[11px] text-slate-400 mt-2">{sub}</div>
-      )}
-    </div>
-  );
-}
 
 export default function Projects() {
   const { projects, clients, base44Accounts, payments, expenses, loading, refresh } = useAppData();
@@ -66,19 +37,6 @@ export default function Projects() {
     completed: all.filter((p) => p.status === "completed").length,
     on_hold: all.filter((p) => p.status === "on_hold").length,
   };
-  const pct = (n) => (all.length ? Math.round((n / all.length) * 100) : 0);
-
-  // Growth: projects created this month vs last month
-  const now = new Date();
-  const last = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const inMonth = (y, m) => all.filter((p) => {
-    const d = new Date(p.created_date);
-    return d.getFullYear() === y && d.getMonth() === m;
-  }).length;
-  const thisMonth = inMonth(now.getFullYear(), now.getMonth());
-  const lastMonth = inMonth(last.getFullYear(), last.getMonth());
-  const growth = lastMonth > 0 ? Math.round(((thisMonth - lastMonth) / lastMonth) * 100) : (thisMonth > 0 ? 100 : 0);
-
   const filtered = all
     .filter((p) => tab === "all" || p.status === tab)
     .filter((p) => typeFilter === "all" || (typeFilter === "fixed" ? p.project_type !== "recurring" : p.project_type === "recurring"))
@@ -139,19 +97,6 @@ export default function Projects() {
           </>
         }
       />
-
-      {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-        <KpiCard
-          title="Total Projects"
-          value={counts.all}
-          sub={`${thisMonth} new this month · ${growth >= 0 ? "+" : ""}${growth}% vs last month`}
-          icon={FolderKanban}
-        />
-        <KpiCard title="Active Projects" value={counts.active} sub={`${pct(counts.active)}% of total`} progress={pct(counts.active)} icon={Layers} />
-        <KpiCard title="Completed" value={counts.completed} sub={`${pct(counts.completed)}% of total`} progress={pct(counts.completed)} icon={CheckCircle2} />
-        <KpiCard title="On Hold" value={counts.on_hold} sub={`${pct(counts.on_hold)}% of total`} progress={pct(counts.on_hold)} icon={PauseCircle} />
-      </div>
 
       {/* Filter bar */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 mb-5">
