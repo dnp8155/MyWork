@@ -53,7 +53,7 @@ export default function InvoiceView() {
       <div className="relative bg-white border border-slate-200 rounded-xl p-8 max-w-3xl mx-auto print:border-0 print:rounded-none overflow-hidden">
         <Watermark logo={company.logo} />
         {/* Header */}
-        <div className="flex justify-between items-start gap-6 pb-6 border-b-2 border-slate-900">
+        <div className="flex justify-between items-start gap-6 pb-6 border-b-4 border-black">
           <div className="flex items-start gap-3">
             {company.logo && <Image src={company.logo} className="h-14 w-14 rounded-lg object-contain" fittingType="fit" />}
             <div>
@@ -66,8 +66,8 @@ export default function InvoiceView() {
             </div>
           </div>
           <div className="text-right">
-            <h1 className="text-2xl font-extrabold tracking-wide text-slate-900">INVOICE</h1>
-            <p className="text-sm font-semibold text-indigo-600 mt-1">{invoice.invoice_number}</p>
+            <h1 className="text-2xl font-extrabold tracking-[0.2em] text-black">INVOICE</h1>
+            <p className="text-sm font-semibold text-black mt-1">{invoice.invoice_number}</p>
             <span className={`inline-block mt-2 px-2.5 py-0.5 text-[11px] font-semibold uppercase rounded-full ${f.status === "paid" ? "bg-emerald-50 text-emerald-700" : f.status === "overdue" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}>
               {f.status.replace("_", " ")}
             </span>
@@ -95,12 +95,12 @@ export default function InvoiceView() {
         {/* Items */}
         <table className="w-full text-sm border border-slate-200">
           <thead>
-            <tr className="bg-slate-100 text-left text-[11px] uppercase tracking-wide text-slate-600">
-              <th className="px-3 py-2 border-b border-r border-slate-200 w-10">#</th>
-              <th className="px-3 py-2 border-b border-r border-slate-200">Description</th>
-              <th className="px-3 py-2 border-b border-r border-slate-200 text-right w-16">Qty</th>
-              <th className="px-3 py-2 border-b border-r border-slate-200 text-right w-28">Rate</th>
-              <th className="px-3 py-2 border-b border-slate-200 text-right w-28">Amount</th>
+            <tr className="bg-black text-white text-left text-[11px] uppercase tracking-wide">
+              <th className="px-3 py-2.5 border-b border-r border-slate-700 w-10">#</th>
+              <th className="px-3 py-2.5 border-b border-r border-slate-700">Description</th>
+              <th className="px-3 py-2.5 border-b border-r border-slate-700 text-right w-16">Qty</th>
+              <th className="px-3 py-2.5 border-b border-r border-slate-700 text-right w-28">Rate</th>
+              <th className="px-3 py-2.5 border-b border-slate-700 text-right w-28">Amount</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -134,22 +134,22 @@ export default function InvoiceView() {
             <div className="flex justify-between"><span className="text-slate-500">Subtotal</span><span>{formatCurrency(invoice.subtotal, symbol)}</span></div>
             {Number(invoice.discount) > 0 && <div className="flex justify-between"><span className="text-slate-500">Discount</span><span>-{formatCurrency(invoice.discount, symbol)}</span></div>}
             <div className="flex justify-between"><span className="text-slate-500">Tax{invoice.tax_rate ? ` (${invoice.tax_rate}%)` : ""}</span><span>{formatCurrency(invoice.tax, symbol)}</span></div>
-            <div className="flex justify-between font-bold text-base pt-1.5 border-t border-slate-200"><span>Total</span><span className="text-indigo-600">{formatCurrency(invoice.total, symbol)}</span></div>
+            <div className="flex justify-between font-bold text-base pt-1.5 border-t-2 border-black"><span>Total</span><span className="text-black">{formatCurrency(invoice.total, symbol)}</span></div>
             {f.paid > 0 && <div className="flex justify-between text-emerald-600"><span>Paid</span><span>{formatCurrency(f.paid, symbol)}</span></div>}
             {f.pending > 0 && <div className="flex justify-between text-amber-600 font-medium"><span>Balance Due</span><span>{formatCurrency(f.pending, symbol)}</span></div>}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="grid grid-cols-2 gap-6 mt-8 pt-5 border-t border-slate-200 text-xs">
+        <div className="grid grid-cols-2 gap-6 mt-8 pt-5 border-t-2 border-black text-xs">
           <div>
             {invoice.notes && <p className="text-slate-600 whitespace-pre-line">{invoice.notes}</p>}
             <p className="text-slate-400 mt-2">Thank you for your business.</p>
           </div>
           <div className="text-right">
-            <p className="text-slate-600 font-semibold">For {company.company_name || "MeWork"}</p>
+            <p className="text-black font-semibold">For {company.company_name || "MeWork"}</p>
             <div className="h-12" />
-            <p className="border-t border-slate-300 pt-1 text-slate-500 inline-block ml-auto">Authorised Signatory</p>
+            <p className="border-t border-black pt-1 text-slate-700 inline-block ml-auto">Authorised Signatory</p>
           </div>
         </div>
         <p className="text-center text-[10px] text-slate-400 mt-6">This is a computer generated invoice.</p>
