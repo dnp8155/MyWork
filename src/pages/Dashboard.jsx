@@ -148,7 +148,7 @@ function KpiGroup({ title, icon: Icon, items }) {
         <Icon className="w-4 h-4 text-slate-500" />
         <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
       </div>
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
         {items.map((it) => (
           <div key={it.label} className="text-center">
             <div className="text-lg font-bold text-slate-900">{it.value}</div>

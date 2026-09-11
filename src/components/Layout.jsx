@@ -139,7 +139,7 @@ function GlobalSearch() {
           }
         }}
         placeholder="Search projects, clients, invoices…"
-        className="w-48 md:w-80 pl-9 pr-3 py-2 text-sm bg-slate-100 rounded-lg border border-transparent focus:border-indigo-300 focus:bg-white focus:outline-none transition"
+        className="w-36 sm:w-48 md:w-80 pl-9 pr-3 py-2 text-sm bg-slate-100 rounded-lg border border-transparent focus:border-indigo-300 focus:bg-white focus:outline-none transition"
       />
     </div>
   );
