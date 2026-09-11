@@ -11,7 +11,7 @@ import {
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" }) : "—";
 
-export default function ProjectCard({ project: p, payments, expenses, onArchive }) {
+export default function ProjectCard({ project: p, payments, expenses, onArchive, onEdit }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const recurring = p.project_type === "recurring";
@@ -26,7 +26,6 @@ export default function ProjectCard({ project: p, payments, expenses, onArchive 
 
   const items = [
     { label: "View Project", icon: Eye, go: `/projects/${p.id}` },
-    { label: "Edit Project", icon: Pencil, go: `/projects/${p.id}` },
     { label: "Add Payment", icon: IndianRupee, go: `/projects/${p.id}` },
     { label: "Add Expense", icon: Receipt, go: `/projects/${p.id}` },
     { label: "Add Domain", icon: Globe, go: "/domains" },
@@ -75,6 +74,12 @@ export default function ProjectCard({ project: p, payments, expenses, onArchive 
                   </button>
                 ))}
                 <div className="border-t border-slate-100 my-1" />
+                <button
+                  onClick={() => { setMenuOpen(false); onEdit?.(p); }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 text-left"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> Edit Project
+                </button>
                 <button
                   onClick={() => { setMenuOpen(false); onArchive?.(p); }}
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 text-left"

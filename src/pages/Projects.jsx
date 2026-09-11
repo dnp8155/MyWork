@@ -10,7 +10,7 @@ import ProjectCard from "@/components/projects/ProjectCard";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Download, LayoutGrid, List as ListIcon, FolderKanban } from "lucide-react";
+import { Plus, Download, LayoutGrid, List as ListIcon, FolderKanban, Pencil } from "lucide-react";
 
 const TABS = [
   { key: "all", label: "All Projects" },
@@ -22,6 +22,7 @@ const TABS = [
 export default function Projects() {
   const { projects, clients, base44Accounts, payments, expenses, loading, refresh } = useAppData();
   const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -161,7 +162,7 @@ export default function Projects() {
       ) : view === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
           {filtered.map((p) => (
-            <ProjectCard key={p.id} project={p} payments={payments} expenses={expenses} onArchive={archiveProject} />
+            <ProjectCard key={p.id} project={p} payments={payments} expenses={expenses} onArchive={archiveProject} onEdit={setEditing} />
           ))}
         </div>
       ) : (
@@ -181,6 +182,13 @@ export default function Projects() {
                   {p.project_type === "recurring" ? "Recurring" : "Fixed"}
                 </span>
                 <span className="hidden md:block text-xs text-slate-600 w-28 text-right">{formatCurrency(f.received)} / {formatCurrency(f.value)}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditing(p); }}
+                  className="w-7 h-7 rounded-md text-slate-400 hover:bg-slate-100 hover:text-indigo-600 flex items-center justify-center flex-shrink-0"
+                  title="Edit project"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
                 <StatusBadge status={p.status} />
               </div>
             );
@@ -188,14 +196,20 @@ export default function Projects() {
         </div>
       )}
 
-      {modalOpen && (
+      {(modalOpen || editing) && (
         <ProjectForm
           clients={clients || []}
           base44Accounts={base44Accounts || []}
           existing={projects || []}
           expenses={expenses || []}
-          onClose={() => setModalOpen(false)}
-          onSaved={() => { setModalOpen(false); refresh(); toast({ title: "Project created" }); }}
+          payments={payments || []}
+          project={editing}
+          onClose={() => { setModalOpen(false); setEditing(null); }}
+          onSaved={() => {
+            const wasEditing = !!editing;
+            setModalOpen(false); setEditing(null); refresh();
+            toast({ title: wasEditing ? "Project updated" : "Project created" });
+          }}
         />
       )}
     </div>

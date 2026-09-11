@@ -20,23 +20,51 @@ function Section({ title, icon: Icon, children }) {
   );
 }
 
-export default function ProjectForm({ clients, base44Accounts, existing, expenses = [], onClose, onSaved }) {
-  const [form, setForm] = useState({
-    logo: "", name: "", client_id: "", contact_name: "", contact_number: "",
-    client_email: "", client_address: "", company_name: "",
-    base44_account_id: "", base44_project_url: "", status: "pending",
-    project_type: "fixed", total_amount: 0, monthly_amount: 0,
-    number_of_months: 1, payment_due_day: 1, recurring_start_date: "",
-    start_date: "", expected_completion_date: "", description: "",
-  });
+const defaultForm = () => ({
+  logo: "", name: "", client_id: "", contact_name: "", contact_number: "",
+  client_email: "", client_address: "", company_name: "",
+  base44_account_id: "", base44_project_url: "", status: "pending",
+  project_type: "fixed", total_amount: 0, monthly_amount: 0,
+  number_of_months: 1, payment_due_day: 1, recurring_start_date: "",
+  start_date: "", expected_completion_date: "", description: "",
+});
+
+export default function ProjectForm({ clients, base44Accounts, existing, expenses = [], payments = [], project, onClose, onSaved }) {
+  const editing = !!project;
+  const [form, setForm] = useState(() => editing ? {
+    ...defaultForm(),
+    logo: project.logo || "",
+    name: project.name || "",
+    client_id: project.client_id || "",
+    contact_name: project.client_name || "",
+    contact_number: project.client_phone || "",
+    client_email: project.client_email || "",
+    client_address: project.client_address || "",
+    company_name: project.company_name || "",
+    base44_account_id: project.base44_account_id || "",
+    base44_project_url: project.base44_project_url || "",
+    status: project.status || "pending",
+    project_type: project.project_type || "fixed",
+    total_amount: Number(project.total_amount) || 0,
+    monthly_amount: Number(project.monthly_amount) || 0,
+    number_of_months: Number(project.number_of_months) || 1,
+    payment_due_day: Number(project.payment_due_day) || 1,
+    recurring_start_date: project.recurring_start_date || "",
+    start_date: project.start_date || "",
+    expected_completion_date: project.expected_completion_date || "",
+    description: project.description || "",
+  } : defaultForm());
   const [domain, setDomain] = useState({ enabled: false, domain_name: "", registrar: "", purchase_date: "", renewal_date: "", renewal_cost: 0, purchased_by: "us", include_in_cost: true });
   const [hosting, setHosting] = useState({ enabled: false, provider: "", plan: "", name: "", renewal_date: "", cost: 0, purchased_by: "us", include_in_cost: true });
+  const [advance, setAdvance] = useState(0);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const setD = (k, v) => setDomain((d) => ({ ...d, [k]: v }));
   const setH = (k, v) => setHosting((h) => ({ ...h, [k]: v }));
+
+  const fixedTotal = Number(form.total_amount) || 0;
 
   const uploadLogo = async (e) => {
     const file = e.target.files?.[0];
@@ -57,12 +85,11 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
     setSaving(true);
     try {
       const year = new Date().getFullYear();
-      const project_number = nextNumber("PRJ", year, existing);
       const salaried = form.project_type === "recurring";
       const contactName = form.contact_name || "";
       const total = salaried
         ? (Number(form.monthly_amount) || 0) * (Number(form.number_of_months) || 0)
-        : Number(form.total_amount) || 0;
+        : fixedTotal;
       let recurring_end_date = "";
       if (salaried && form.recurring_start_date) {
         const sd = new Date(form.recurring_start_date);
@@ -70,10 +97,9 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
         recurring_end_date = sd.toISOString().slice(0, 10);
       }
 
-      const project = await base44.entities.Project.create({
+      const payload = {
         name: form.name,
         logo: form.logo,
-        project_number,
         client_id: form.client_id,
         client_name: contactName,
         company_name: form.company_name || "",
@@ -94,7 +120,44 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
         number_of_months: Number(form.number_of_months) || 0,
         payment_due_day: Number(form.payment_due_day) || 1,
         billing_frequency: "monthly",
+      };
+
+      // ---- Edit mode: just update the project ----
+      if (editing) {
+        await base44.entities.Project.update(project.id, payload);
+        await base44.entities.AuditLog.create({ action: "updated", entity: "Project", entity_id: project.id, description: `Updated project ${form.name}` });
+        onSaved();
+        return;
+      }
+
+      // ---- Create mode ----
+      const created = await base44.entities.Project.create({
+        ...payload,
+        project_number: nextNumber("PRJ", year, existing),
       });
+
+      // Fixed: record advance payment (auto-subtracted from pending amount)
+      if (!salaried && Number(advance) > 0) {
+        const payment = await base44.entities.Payment.create({
+          payment_number: nextNumber("PAY", year, payments),
+          date: today(),
+          amount: Number(advance),
+          client_id: form.client_id,
+          client_name: contactName,
+          project_id: created.id,
+          project_name: created.name,
+          payment_method: "bank_transfer",
+          reference: "Advance",
+          notes: "Advance paid at project creation",
+          type: "project",
+        });
+        await base44.entities.Transaction.create({
+          transaction_number: `TXN-${Date.now()}`, date: today(), type: "income", category: "project_payment",
+          amount: Number(advance), project_id: created.id, project_name: created.name,
+          client_id: form.client_id, client_name: contactName, payment_method: "bank_transfer",
+          description: `Advance payment for ${form.name}`, source_entity: "payment", source_id: payment.id,
+        });
+      }
 
       // Salaried: generate monthly payment schedule
       if (salaried && form.recurring_start_date) {
@@ -103,8 +166,8 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
         for (let i = 0; i < (Number(form.number_of_months) || 0); i++) {
           const d = new Date(start.getFullYear(), start.getMonth() + i, form.payment_due_day || 1);
           schedules.push({
-            project_id: project.id,
-            project_name: project.name,
+            project_id: created.id,
+            project_name: created.name,
             client_id: form.client_id,
             client_name: contactName,
             due_date: d.toISOString().slice(0, 10),
@@ -126,8 +189,8 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
               amount: Number(domain.renewal_cost) || 0,
               category: "domain",
               vendor: domain.registrar,
-              project_id: project.id,
-              project_name: project.name,
+              project_id: created.id,
+              project_name: created.name,
               client_id: form.client_id,
               client_name: contactName,
               description: `Domain: ${domain.domain_name}`,
@@ -142,8 +205,8 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
           purchase_cost: Number(domain.renewal_cost) || 0,
           renewal_cost: Number(domain.renewal_cost) || 0,
           purchased_by: domain.purchased_by,
-          project_id: project.id,
-          project_name: project.name,
+          project_id: created.id,
+          project_name: created.name,
           client_id: form.client_id,
           client_name: contactName,
           status: "active",
@@ -160,8 +223,8 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
               amount: Number(hosting.cost) || 0,
               category: "hosting",
               vendor: hosting.provider,
-              project_id: project.id,
-              project_name: project.name,
+              project_id: created.id,
+              project_name: created.name,
               client_id: form.client_id,
               client_name: contactName,
               description: `Hosting: ${hosting.provider} ${hosting.plan}`,
@@ -175,8 +238,8 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
           renewal_date: hosting.renewal_date,
           cost: Number(hosting.cost) || 0,
           purchased_by: hosting.purchased_by,
-          project_id: project.id,
-          project_name: project.name,
+          project_id: created.id,
+          project_name: created.name,
           client_id: form.client_id,
           client_name: contactName,
           status: "active",
@@ -184,17 +247,17 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
         });
       }
 
-      await base44.entities.AuditLog.create({ action: "created", entity: "Project", entity_id: project.id, description: `Created project ${project.name}` });
+      await base44.entities.AuditLog.create({ action: "created", entity: "Project", entity_id: created.id, description: `Created project ${form.name}` });
       onSaved();
     } catch (err) {
-      alert("Error creating project: " + err.message);
+      alert("Error saving project: " + err.message);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal open onClose={onClose} title="New Project" size="xl">
+    <Modal open onClose={onClose} title={editing ? "Edit Project" : "New Project"} size="xl">
       <form onSubmit={submit} className="space-y-6">
         <Section title="Basic Info">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -241,12 +304,25 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
               <option value="completed">Completed</option>
               <option value="on_hold">On Hold</option>
             </Select>
-            <Input label="Start Date" type="date" value={form.start_date} onChange={(e) => set("start_date", e.target.value)} />
-            <Input label="End / Completion Date" type="date" value={form.expected_completion_date} onChange={(e) => set("expected_completion_date", e.target.value)} />
+            {form.project_type === "recurring" && (
+              <>
+                <Input label="Start Date" type="date" value={form.start_date} onChange={(e) => set("start_date", e.target.value)} />
+                <Input label="End / Completion Date" type="date" value={form.expected_completion_date} onChange={(e) => set("expected_completion_date", e.target.value)} />
+              </>
+            )}
           </div>
           {form.project_type === "fixed" ? (
-            <div className="mt-4">
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
               <Input label="Project Price (₹)" type="number" value={form.total_amount} onChange={(e) => set("total_amount", Number(e.target.value))} />
+              {!editing && (
+                <>
+                  <Input label="Advance Paid (₹)" type="number" value={advance} onChange={(e) => setAdvance(Number(e.target.value))} />
+                  <div className="flex flex-col justify-center">
+                    <p className="text-xs text-slate-400">Remaining Amount</p>
+                    <p className="text-sm font-semibold text-slate-800">{formatCurrency(Math.max(fixedTotal - (Number(advance) || 0), 0))}</p>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
@@ -261,62 +337,66 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
           )}
         </Section>
 
-        <Section title="Domain (optional)" icon={Globe}>
-          <label className="flex items-center gap-2 text-sm text-slate-700 mb-3">
-            <input type="checkbox" checked={domain.enabled} onChange={(e) => setD("enabled", e.target.checked)} className="rounded border-slate-300" />
-            Add a domain for this project
-          </label>
-          {domain.enabled && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <Input label="Domain Name" value={domain.domain_name} onChange={(e) => setD("domain_name", e.target.value)} placeholder="example.com" />
-              <Input label="Registrar" value={domain.registrar} onChange={(e) => setD("registrar", e.target.value)} />
-              <Input label="Cost (₹)" type="number" value={domain.renewal_cost} onChange={(e) => setD("renewal_cost", Number(e.target.value))} />
-              <Input label="Purchase Date" type="date" value={domain.purchase_date} onChange={(e) => setD("purchase_date", e.target.value)} />
-              <Input label="Renewal Date" type="date" value={domain.renewal_date} onChange={(e) => setD("renewal_date", e.target.value)} />
-              <Select label="Purchased By" value={domain.purchased_by} onChange={(e) => setD("purchased_by", e.target.value)}>
-                <option value="us">We purchased</option>
-                <option value="client">Client provided</option>
-              </Select>
-              {domain.purchased_by === "us" && (
-                <label className="col-span-2 sm:col-span-3 flex items-center gap-2 text-xs text-slate-600">
-                  <input type="checkbox" checked={domain.include_in_cost} onChange={(e) => setD("include_in_cost", e.target.checked)} className="rounded border-slate-300" />
-                  Include in project cost (this amount will be subtracted from profit)
-                </label>
+        {!editing && (
+          <>
+            <Section title="Domain (optional)" icon={Globe}>
+              <label className="flex items-center gap-2 text-sm text-slate-700 mb-3">
+                <input type="checkbox" checked={domain.enabled} onChange={(e) => setD("enabled", e.target.checked)} className="rounded border-slate-300" />
+                Add a domain for this project
+              </label>
+              {domain.enabled && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <Input label="Domain Name" value={domain.domain_name} onChange={(e) => setD("domain_name", e.target.value)} placeholder="example.com" />
+                  <Input label="Registrar" value={domain.registrar} onChange={(e) => setD("registrar", e.target.value)} />
+                  <Input label="Cost (₹)" type="number" value={domain.renewal_cost} onChange={(e) => setD("renewal_cost", Number(e.target.value))} />
+                  <Input label="Purchase Date" type="date" value={domain.purchase_date} onChange={(e) => setD("purchase_date", e.target.value)} />
+                  <Input label="Renewal Date" type="date" value={domain.renewal_date} onChange={(e) => setD("renewal_date", e.target.value)} />
+                  <Select label="Purchased By" value={domain.purchased_by} onChange={(e) => setD("purchased_by", e.target.value)}>
+                    <option value="us">We purchased</option>
+                    <option value="client">Client provided</option>
+                  </Select>
+                  {domain.purchased_by === "us" && (
+                    <label className="col-span-2 sm:col-span-3 flex items-center gap-2 text-xs text-slate-600">
+                      <input type="checkbox" checked={domain.include_in_cost} onChange={(e) => setD("include_in_cost", e.target.checked)} className="rounded border-slate-300" />
+                      Include in project cost (this amount will be subtracted from profit)
+                    </label>
+                  )}
+                </div>
               )}
-            </div>
-          )}
-        </Section>
+            </Section>
 
-        <Section title="Hosting (optional)" icon={HardDrive}>
-          <label className="flex items-center gap-2 text-sm text-slate-700 mb-3">
-            <input type="checkbox" checked={hosting.enabled} onChange={(e) => setH("enabled", e.target.checked)} className="rounded border-slate-300" />
-            Add hosting for this project
-          </label>
-          {hosting.enabled && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <Input label="Provider" value={hosting.provider} onChange={(e) => setH("provider", e.target.value)} placeholder="Hostinger, AWS…" />
-              <Input label="Plan" value={hosting.plan} onChange={(e) => setH("plan", e.target.value)} />
-              <Input label="Cost (₹)" type="number" value={hosting.cost} onChange={(e) => setH("cost", Number(e.target.value))} />
-              <Input label="Renewal Date" type="date" value={hosting.renewal_date} onChange={(e) => setH("renewal_date", e.target.value)} />
-              <Select label="Purchased By" value={hosting.purchased_by} onChange={(e) => setH("purchased_by", e.target.value)}>
-                <option value="us">We purchased</option>
-                <option value="client">Client provided</option>
-              </Select>
-              {hosting.purchased_by === "us" && (
-                <label className="col-span-2 sm:col-span-3 flex items-center gap-2 text-xs text-slate-600">
-                  <input type="checkbox" checked={hosting.include_in_cost} onChange={(e) => setH("include_in_cost", e.target.checked)} className="rounded border-slate-300" />
-                  Include in project cost (this amount will be subtracted from profit)
-                </label>
+            <Section title="Hosting (optional)" icon={HardDrive}>
+              <label className="flex items-center gap-2 text-sm text-slate-700 mb-3">
+                <input type="checkbox" checked={hosting.enabled} onChange={(e) => setH("enabled", e.target.checked)} className="rounded border-slate-300" />
+                Add hosting for this project
+              </label>
+              {hosting.enabled && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <Input label="Provider" value={hosting.provider} onChange={(e) => setH("provider", e.target.value)} placeholder="Hostinger, AWS…" />
+                  <Input label="Plan" value={hosting.plan} onChange={(e) => setH("plan", e.target.value)} />
+                  <Input label="Cost (₹)" type="number" value={hosting.cost} onChange={(e) => setH("cost", Number(e.target.value))} />
+                  <Input label="Renewal Date" type="date" value={hosting.renewal_date} onChange={(e) => setH("renewal_date", e.target.value)} />
+                  <Select label="Purchased By" value={hosting.purchased_by} onChange={(e) => setH("purchased_by", e.target.value)}>
+                    <option value="us">We purchased</option>
+                    <option value="client">Client provided</option>
+                  </Select>
+                  {hosting.purchased_by === "us" && (
+                    <label className="col-span-2 sm:col-span-3 flex items-center gap-2 text-xs text-slate-600">
+                      <input type="checkbox" checked={hosting.include_in_cost} onChange={(e) => setH("include_in_cost", e.target.checked)} className="rounded border-slate-300" />
+                      Include in project cost (this amount will be subtracted from profit)
+                    </label>
+                  )}
+                </div>
               )}
-            </div>
-          )}
-        </Section>
+            </Section>
+          </>
+        )}
 
         <Textarea label="Description" value={form.description} onChange={(e) => set("description", e.target.value)} />
 
         <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-          <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? "Saving…" : "Create Project"}</button>
+          <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? "Saving…" : editing ? "Save Changes" : "Create Project"}</button>
         </div>
       </form>
     </Modal>
