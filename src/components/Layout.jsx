@@ -55,7 +55,7 @@ export default function Layout() {
             alt="MeWork"
           />
         </div>
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+        <nav className="flex-1 py-2 px-3 space-y-0.5 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -63,7 +63,7 @@ export default function Layout() {
               end={item.end}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                `flex items-center gap-3 px-3 py-[7px] rounded-lg text-[13px] font-medium transition-colors ${
                   isActive
                     ? "bg-indigo-600 text-white"
                     : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
