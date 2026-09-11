@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAppData } from "@/hooks/useAppData";
 import { base44 } from "@/api/base44Client";
 import { computeInvoiceFinancials, nextNumber, formatCurrency } from "@/lib/finance";
@@ -16,8 +17,8 @@ export default function Invoices() {
   const [modalOpen, setModalOpen] = useState(false);
   const [filter, setFilter] = useState("all");
   const [payModal, setPayModal] = useState(null);
-  const [viewInv, setViewInv] = useState(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const filtered = (invoices || []).filter((i) => filter === "all" || i.status === filter).sort((a, b) => (b.created_date || "").localeCompare(a.created_date || ""));
   const totalInvoiced = (invoices || []).reduce((s, i) => s + (Number(i.total) || 0), 0);
@@ -81,7 +82,7 @@ export default function Invoices() {
                 const f = computeInvoiceFinancials(inv, payments);
                 return (
                   <tr key={inv.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium text-indigo-600 cursor-pointer" onClick={() => setViewInv(inv)}>{inv.invoice_number}</td>
+                    <td className="px-4 py-3 font-medium text-indigo-600 cursor-pointer" onClick={() => navigate(`/invoices/${inv.id}`)}>{inv.invoice_number}</td>
                     <td className="px-4 py-3 text-slate-600">{inv.client_name}</td>
                     <td className="px-4 py-3 text-slate-500">{inv.invoice_date}</td>
                     <td className="px-4 py-3 text-slate-500">{inv.due_date}</td>
@@ -103,7 +104,6 @@ export default function Invoices() {
       )}
       {modalOpen && <InvoiceForm clients={clients || []} projects={projects || []} existing={invoices || []} onClose={() => setModalOpen(false)} onSaved={() => { setModalOpen(false); refresh(); toast({ title: "Invoice created" }); }} />}
       {payModal && <PayModal invoice={payModal} onClose={() => setPayModal(null)} onSave={recordPayment} />}
-      {viewInv && <InvoiceView invoice={viewInv} payments={(payments || []).filter((p) => p.invoice_id === viewInv.id)} onClose={() => setViewInv(null)} />}
     </div>
   );
 }
@@ -201,42 +201,6 @@ function PayModal({ invoice, onClose, onSave }) {
           <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg disabled:opacity-50">{saving ? "Saving…" : "Record"}</button>
         </div>
       </form>
-    </Modal>
-  );
-}
-
-function InvoiceView({ invoice, payments, onClose }) {
-  const paid = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
-  const pending = Math.max(invoice.total - paid, 0);
-  return (
-    <Modal open onClose={onClose} title={`Invoice ${invoice.invoice_number}`} size="lg">
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><p className="text-xs text-slate-400">Client</p><p className="font-medium">{invoice.client_name}</p></div>
-          <div><p className="text-xs text-slate-400">Date / Due</p><p className="font-medium">{invoice.invoice_date} → {invoice.due_date}</p></div>
-        </div>
-        <div className="border border-slate-200 rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50"><tr><th className="text-left px-3 py-2">Description</th><th className="text-right px-3 py-2">Qty</th><th className="text-right px-3 py-2">Price</th><th className="text-right px-3 py-2">Total</th></tr></thead>
-            <tbody className="divide-y divide-slate-100">
-              {(invoice.items || []).map((it, i) => <tr key={i}><td className="px-3 py-2">{it.description}</td><td className="px-3 py-2 text-right">{it.quantity}</td><td className="px-3 py-2 text-right">{formatCurrency(it.unit_price)}</td><td className="px-3 py-2 text-right">{formatCurrency(it.quantity * it.unit_price)}</td></tr>)}
-            </tbody>
-          </table>
-          <div className="p-3 bg-slate-50 space-y-1 text-sm">
-            <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(invoice.subtotal)}</span></div>
-            <div className="flex justify-between"><span>Discount</span><span>-{formatCurrency(invoice.discount)}</span></div>
-            <div className="flex justify-between"><span>Tax</span><span>{formatCurrency(invoice.tax)}</span></div>
-            <div className="flex justify-between font-bold text-base pt-1 border-t border-slate-200"><span>Total</span><span className="text-indigo-600">{formatCurrency(invoice.total)}</span></div>
-            <div className="flex justify-between text-emerald-600"><span>Paid</span><span>{formatCurrency(paid)}</span></div>
-            <div className="flex justify-between text-amber-600"><span>Pending</span><span>{formatCurrency(pending)}</span></div>
-          </div>
-        </div>
-        {payments.length > 0 && (
-          <div><p className="text-xs text-slate-400 mb-1">Payment History</p>
-            {payments.map((p) => <div key={p.id} className="flex justify-between text-sm py-1"><span>{p.date} • {p.payment_method}</span><span className="text-emerald-600">{formatCurrency(p.amount)}</span></div>)}
-          </div>
-        )}
-      </div>
     </Modal>
   );
 }

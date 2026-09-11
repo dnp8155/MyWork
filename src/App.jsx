@@ -23,6 +23,7 @@ import Base44Accounts from '@/pages/Base44Accounts';
 import Credentials from '@/pages/Credentials';
 import Quotations from '@/pages/Quotations';
 import Invoices from '@/pages/Invoices';
+import InvoiceView from '@/pages/InvoiceView';
 import Payments from '@/pages/Payments';
 import Expenses from '@/pages/Expenses';
 import Domains from '@/pages/Domains';
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
           <Route path="/credentials" element={<Credentials />} />
           <Route path="/quotations" element={<Quotations />} />
           <Route path="/invoices" element={<Invoices />} />
+          <Route path="/invoices/:id" element={<InvoiceView />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/domains" element={<Domains />} />
