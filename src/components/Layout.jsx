@@ -6,7 +6,7 @@ import NotificationBell from "@/components/NotificationBell";
 import {
   LayoutDashboard, FolderKanban, Users, Server, FileText, Receipt,
   Globe, HardDrive, BarChart3, Settings as SettingsIcon,
-  Menu, X, LogOut, Search, KeyRound
+  Menu, X, LogOut, Search, KeyRound, PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 
 const navItems = [
@@ -26,6 +26,7 @@ const navItems = [
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [user, setUser] = React.useState(null);
   const navigate = useNavigate();
 
@@ -41,15 +42,15 @@ export default function Layout() {
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-200 ${
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transition-all duration-200 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
+        } ${collapsed ? "lg:w-20" : "lg:w-64"}`}
       >
-        <div className="h-16 flex items-center px-5 border-b border-slate-200">
+        <div className={`h-16 flex items-center border-b border-slate-200 ${collapsed ? "lg:justify-center lg:px-2" : "px-5"}`}>
           <Image
             src="https://media.base44.com/images/public/6aa4049391d33a443027588d/3321c12ed_ChatGPTImageSep11202607_58_37PM.png"
             fittingType="fit"
-            className="h-10 w-36"
+            className={collapsed ? "h-10 w-36 lg:h-9 lg:w-9" : "h-10 w-36"}
             alt="MeWork"
           />
         </div>
@@ -68,8 +69,8 @@ export default function Layout() {
                 }`
               }
             >
-              <item.icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
-              {item.label}
+              <item.icon className="w-4.5 h-4.5 flex-shrink-0" style={{ width: 18, height: 18 }} />
+              <span className={collapsed ? "lg:hidden" : ""}>{item.label}</span>
             </NavLink>
           ))}
         </nav>
@@ -78,11 +79,11 @@ export default function Layout() {
             <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-semibold">
               {user?.full_name?.charAt(0) || "U"}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className={`flex-1 min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
               <div className="text-xs text-slate-900 truncate">{user?.full_name || "User"}</div>
               <div className="text-[10px] text-slate-500 capitalize">{user?.role || "admin"}</div>
             </div>
-            <button onClick={handleLogout} className="text-slate-400 hover:text-slate-900">
+            <button onClick={handleLogout} className={`text-slate-400 hover:text-slate-900 ${collapsed ? "lg:hidden" : ""}`}>
               <LogOut className="w-4 h-4" />
             </button>
           </div>
@@ -99,6 +100,13 @@ export default function Layout() {
           <div className="flex items-center gap-3">
             <button className="lg:hidden text-slate-600" onClick={() => setSidebarOpen(true)}>
               <Menu className="w-6 h-6" />
+            </button>
+            <button
+              className="hidden lg:inline-flex text-slate-500 hover:text-slate-900"
+              onClick={() => setCollapsed((c) => !c)}
+              title={collapsed ? "Expand panel" : "Collapse panel"}
+            >
+              {collapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
             </button>
             <GlobalSearch />
           </div>
