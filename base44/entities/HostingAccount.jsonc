@@ -1,0 +1,80 @@
+{
+  "name": "HostingAccount",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string"
+    },
+    "plan": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "server_identifier": {
+      "type": "string"
+    },
+    "purchase_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "renewal_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "cost": {
+      "type": "number",
+      "default": 0
+    },
+    "billing_cycle": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "quarterly",
+        "yearly",
+        "custom"
+      ],
+      "default": "yearly"
+    },
+    "purchased_by": {
+      "type": "string",
+      "enum": [
+        "client",
+        "us"
+      ],
+      "default": "us"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "project_name": {
+      "type": "string"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "expiring_soon",
+        "expired"
+      ],
+      "default": "active"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "expense_id": {
+      "type": "string",
+      "description": "Auto-created expense when purchased_by=us"
+    }
+  },
+  "required": [
+    "provider",
+    "name"
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "name": "Transaction",
+  "type": "object",
+  "properties": {
+    "transaction_number": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "income",
+        "expense"
+      ],
+      "default": "income"
+    },
+    "category": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number",
+      "default": 0
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "project_name": {
+      "type": "string"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "invoice_id": {
+      "type": "string"
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "reference": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "source_entity": {
+      "type": "string",
+      "description": "payment / expense / domain / hosting"
+    },
+    "source_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "date",
+    "type",
+    "amount"
+  ]
+}

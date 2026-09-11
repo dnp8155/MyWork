@@ -1,0 +1,123 @@
+{
+  "name": "Project",
+  "type": "object",
+  "properties": {
+    "project_number": {
+      "type": "string",
+      "description": "Auto-generated e.g. PRJ-0001"
+    },
+    "name": {
+      "type": "string"
+    },
+    "logo": {
+      "type": "string",
+      "description": "Logo image URL"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Linked Client"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "company_name": {
+      "type": "string"
+    },
+    "client_email": {
+      "type": "string"
+    },
+    "client_phone": {
+      "type": "string"
+    },
+    "client_address": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "details": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "on_hold",
+        "pending"
+      ],
+      "default": "pending"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "expected_completion_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "completion_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "base44_account_id": {
+      "type": "string",
+      "description": "Linked Base44 Account"
+    },
+    "base44_workspace_id": {
+      "type": "string"
+    },
+    "base44_project_url": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "project_type": {
+      "type": "string",
+      "enum": [
+        "fixed",
+        "recurring"
+      ],
+      "default": "fixed"
+    },
+    "total_amount": {
+      "type": "number",
+      "default": 0,
+      "description": "Fixed project value OR computed recurring contract value"
+    },
+    "monthly_amount": {
+      "type": "number",
+      "default": 0,
+      "description": "Recurring monthly salary"
+    },
+    "recurring_start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "recurring_end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "number_of_months": {
+      "type": "number",
+      "default": 0
+    },
+    "payment_due_day": {
+      "type": "number",
+      "default": 1
+    },
+    "billing_frequency": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "weekly",
+        "custom"
+      ],
+      "default": "monthly"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

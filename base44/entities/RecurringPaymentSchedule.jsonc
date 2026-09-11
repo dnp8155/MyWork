@@ -1,0 +1,54 @@
+{
+  "name": "RecurringPaymentSchedule",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string"
+    },
+    "project_name": {
+      "type": "string"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "amount": {
+      "type": "number",
+      "default": 0
+    },
+    "paid_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "upcoming",
+        "due",
+        "paid",
+        "partially_paid",
+        "overdue"
+      ],
+      "default": "upcoming"
+    },
+    "payment_id": {
+      "type": "string",
+      "description": "Linked payment when paid"
+    },
+    "installment_number": {
+      "type": "number",
+      "default": 1
+    }
+  },
+  "required": [
+    "project_id",
+    "due_date",
+    "amount"
+  ]
+}

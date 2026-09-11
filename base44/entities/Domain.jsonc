@@ -1,0 +1,71 @@
+{
+  "name": "Domain",
+  "type": "object",
+  "properties": {
+    "domain_name": {
+      "type": "string"
+    },
+    "registrar": {
+      "type": "string"
+    },
+    "purchase_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "renewal_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "purchase_cost": {
+      "type": "number",
+      "default": 0
+    },
+    "renewal_cost": {
+      "type": "number",
+      "default": 0
+    },
+    "purchased_by": {
+      "type": "string",
+      "enum": [
+        "client",
+        "us"
+      ],
+      "default": "us"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "project_name": {
+      "type": "string"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "expiring_soon",
+        "expired"
+      ],
+      "default": "active"
+    },
+    "auto_renewal": {
+      "type": "boolean",
+      "default": false
+    },
+    "notes": {
+      "type": "string"
+    },
+    "expense_id": {
+      "type": "string",
+      "description": "Auto-created expense when purchased_by=us"
+    }
+  },
+  "required": [
+    "domain_name"
+  ]
+}

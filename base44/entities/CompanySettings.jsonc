@@ -1,0 +1,74 @@
+{
+  "name": "CompanySettings",
+  "type": "object",
+  "properties": {
+    "company_name": {
+      "type": "string",
+      "default": "My Agency"
+    },
+    "logo": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "gst_number": {
+      "type": "string"
+    },
+    "pan": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string",
+      "default": "INR"
+    },
+    "currency_symbol": {
+      "type": "string",
+      "default": "\u20b9"
+    },
+    "tax_rate": {
+      "type": "number",
+      "default": 18
+    },
+    "financial_year": {
+      "type": "string",
+      "default": "2026-2027"
+    },
+    "invoice_prefix": {
+      "type": "string",
+      "default": "INV"
+    },
+    "quotation_prefix": {
+      "type": "string",
+      "default": "QT"
+    },
+    "payment_prefix": {
+      "type": "string",
+      "default": "PAY"
+    },
+    "expense_prefix": {
+      "type": "string",
+      "default": "EXP"
+    },
+    "project_prefix": {
+      "type": "string",
+      "default": "PRJ"
+    },
+    "client_prefix": {
+      "type": "string",
+      "default": "CL"
+    }
+  },
+  "required": [
+    "company_name"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "invoice_due",
+        "invoice_overdue",
+        "domain_renewal",
+        "hosting_renewal",
+        "recurring_due",
+        "quotation_expiry",
+        "project_deadline",
+        "general"
+      ],
+      "default": "general"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "related_entity": {
+      "type": "string"
+    },
+    "related_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "read",
+        "dismissed"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

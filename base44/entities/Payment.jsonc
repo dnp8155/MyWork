@@ -1,0 +1,72 @@
+{
+  "name": "Payment",
+  "type": "object",
+  "properties": {
+    "payment_number": {
+      "type": "string",
+      "description": "Auto-generated e.g. PAY-2026-0001"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "amount": {
+      "type": "number",
+      "default": 0
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "project_name": {
+      "type": "string"
+    },
+    "invoice_id": {
+      "type": "string",
+      "description": "Optional linked invoice"
+    },
+    "invoice_number": {
+      "type": "string"
+    },
+    "recurring_schedule_id": {
+      "type": "string",
+      "description": "Optional linked recurring schedule item"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "bank_transfer",
+        "upi",
+        "card",
+        "other"
+      ],
+      "default": "bank_transfer"
+    },
+    "reference": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "project",
+        "invoice",
+        "recurring",
+        "other_income"
+      ],
+      "default": "project"
+    }
+  },
+  "required": [
+    "amount",
+    "date"
+  ]
+}
