@@ -3,8 +3,8 @@ import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import {
-  LayoutDashboard, FolderKanban, Users, Server, FileText, Receipt, Wallet,
-  CreditCard, Globe, HardDrive, BarChart3, Bell, Settings as SettingsIcon,
+  LayoutDashboard, FolderKanban, Users, Server, FileText, Receipt,
+  Globe, HardDrive, BarChart3, Bell, Settings as SettingsIcon,
   Menu, X, LogOut, Search, KeyRound
 } from "lucide-react";
 
@@ -16,8 +16,6 @@ const navItems = [
   { to: "/credentials", label: "Credentials", icon: KeyRound },
   { to: "/quotations", label: "Quotations", icon: FileText },
   { to: "/invoices", label: "Invoices", icon: Receipt },
-  { to: "/payments", label: "Payments", icon: Wallet },
-  { to: "/expenses", label: "Expenses", icon: CreditCard },
   { to: "/domains", label: "Domains", icon: Globe },
   { to: "/hosting", label: "Hosting", icon: HardDrive },
   { to: "/finance", label: "Finance", icon: BarChart3 },
