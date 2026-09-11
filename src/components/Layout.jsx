@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/shared-projects", label: "Shared Projects", icon: Share2 },
   { to: "/clients", label: "Clients", icon: Users },

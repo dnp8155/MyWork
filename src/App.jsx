@@ -62,6 +62,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route path="/landing" element={<Landing />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
@@ -71,7 +72,7 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/projects/:id/shared" element={<SharedProject />} />

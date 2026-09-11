@@ -35,6 +35,7 @@ export default function Register() {
   const [step, setStep] = useState("form"); // form | otp | setup | ready
   const [otpCode, setOtpCode] = useState("");
   const returnTo = safeReturnTo();
+  const destination = returnTo === "/" ? "/dashboard" : returnTo;
 
   const validate = () => {
     const errs = {};
@@ -105,7 +106,7 @@ export default function Register() {
   };
 
   const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", returnTo);
+    base44.auth.loginWithProvider("google", destination);
   };
 
   const handleSetupComplete = async (data) => {
@@ -207,7 +208,7 @@ export default function Register() {
         </div>
         <Button
           className="w-full h-12 font-semibold bg-indigo-600 hover:bg-indigo-700"
-          onClick={() => { window.location.href = returnTo; }}
+          onClick={() => { window.location.href = destination; }}
         >
           Go to Dashboard
         </Button>
@@ -224,7 +225,7 @@ export default function Register() {
         <>
           Already have an account?{" "}
           <Link
-            to={"/login" + (returnTo !== "/" ? "?returnTo=" + encodeURIComponent(returnTo) : "")}
+            to={"/login" + (destination !== "/dashboard" ? "?returnTo=" + encodeURIComponent(destination) : "")}
             className="text-indigo-600 font-semibold hover:underline"
           >
             Sign In
@@ -241,7 +242,7 @@ export default function Register() {
           <span className="flex-1">{error}</span>
           {existsAccount && (
             <Link
-              to={"/login" + (returnTo !== "/" ? "?returnTo=" + encodeURIComponent(returnTo) : "")}
+              to={"/login" + (destination !== "/dashboard" ? "?returnTo=" + encodeURIComponent(destination) : "")}
               className="shrink-0 inline-flex items-center h-8 px-3 rounded-md bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
             >
               Sign In

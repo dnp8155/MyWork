@@ -18,11 +18,12 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const returnTo = safeReturnTo();
+  const destination = returnTo === "/" ? "/dashboard" : returnTo;
 
   // Skip the login page for users with an active session
   useEffect(() => {
     base44.auth.isAuthenticated().then((authed) => {
-      if (authed) window.location.replace(returnTo);
+      if (authed) window.location.replace(destination);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -43,7 +44,7 @@ export default function Login() {
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email.trim(), password);
-      window.location.href = returnTo;
+      window.location.href = destination;
     } catch {
       setError("Invalid email or password.");
     } finally {
@@ -52,7 +53,7 @@ export default function Login() {
   };
 
   const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", returnTo);
+    base44.auth.loginWithProvider("google", destination);
   };
 
   return (
@@ -63,7 +64,7 @@ export default function Login() {
         <>
           Don't have an account?{" "}
           <Link
-            to={"/register" + (returnTo !== "/" ? "?returnTo=" + encodeURIComponent(returnTo) : "")}
+            to={"/register" + (destination !== "/dashboard" ? "?returnTo=" + encodeURIComponent(destination) : "")}
             className="text-indigo-600 font-semibold hover:underline"
           >
             Create an account
