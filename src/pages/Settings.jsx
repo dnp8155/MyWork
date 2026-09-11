@@ -9,6 +9,7 @@ export default function Settings() {
   const [settings, setSettings] = useState(null);
   const [tab, setTab] = useState("company");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,6 +67,34 @@ export default function Settings() {
               <Input label="PAN" value={settings.pan} onChange={(e) => set("pan", e.target.value)} />
             </div>
             <Textarea label="Address" value={settings.address} onChange={(e) => set("address", e.target.value)} />
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Company Logo (invoice header)</label>
+              <div className="flex items-center gap-3">
+                {settings.logo ? (
+                  <img src={settings.logo} alt="logo" className="h-14 w-14 rounded-lg border border-slate-200 object-contain bg-white" />
+                ) : (
+                  <div className="h-14 w-14 rounded-lg border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-300"><Building2 className="w-6 h-6" /></div>
+                )}
+                <label className="px-3 py-2 text-sm border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50">
+                  {uploading ? "Uploading…" : "Upload Logo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploading(true);
+                      try {
+                        const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+                        set("logo", file_url);
+                      } catch (err) { alert(err.message); } finally { setUploading(false); }
+                    }}
+                  />
+                </label>
+                {settings.logo && <button onClick={() => set("logo", "")} className="text-sm text-rose-500 hover:underline">Remove</button>}
+              </div>
+            </div>
           </div>
         )}
         {tab === "financial" && (
