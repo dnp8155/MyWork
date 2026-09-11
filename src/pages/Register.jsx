@@ -4,12 +4,22 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { UserPlus, Mail, Lock, Loader2, Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
+import PasswordStrength from "@/components/auth/PasswordStrength";
+import WorkspaceSetupForm from "@/components/auth/WorkspaceSetup";
 import { toast } from "@/components/ui/use-toast";
 import { safeReturnTo } from "@/lib/authReturnTo";
+
+const BRAND_KPIS = [
+  ["Projects", "4", "text-white"],
+  ["Revenue", "₹12,40,000", "text-white"],
+  ["Pending Payments", "₹1,85,000", "text-white"],
+  ["Expenses", "₹2,85,000", "text-rose-200"],
+  ["Profit", "₹9,55,000", "text-emerald-300"],
+];
 
 export default function Register() {
   const [fullName, setFullName] = useState("");
@@ -20,18 +30,19 @@ export default function Register() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [errors, setErrors] = useState({});
   const [error, setError] = useState("");
+  const [existsAccount, setExistsAccount] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showOtp, setShowOtp] = useState(false);
+  const [step, setStep] = useState("form"); // form | otp | setup | ready
   const [otpCode, setOtpCode] = useState("");
   const returnTo = safeReturnTo();
 
   const validate = () => {
     const errs = {};
-    if (!fullName.trim()) errs.fullName = "Please enter your full name.";
+    if (!fullName.trim()) errs.fullName = "Please enter your name.";
     if (!email.trim()) errs.email = "Please enter your email.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errs.email = "Please enter a valid email address.";
     if (!password) errs.password = "Please enter a password.";
-    else if (password.length < 8) errs.password = "Password must be at least 8 characters.";
+    else if (password.length < 8) errs.password = "Password does not meet the requirements.";
     if (!confirmPassword) errs.confirmPassword = "Please confirm your password.";
     else if (password !== confirmPassword) errs.confirmPassword = "Passwords do not match.";
     setErrors(errs);
@@ -41,13 +52,20 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setExistsAccount(false);
     if (!validate()) return;
     setLoading(true);
     try {
       await base44.auth.register({ email: email.trim(), password });
-      setShowOtp(true);
+      setError("");
+      setStep("otp");
     } catch (err) {
-      setError(err.message || "Registration failed");
+      if (/exist|already|registered/i.test(err.message || "")) {
+        setExistsAccount(true);
+        setError("That email is already registered. Try signing in instead.");
+      } else {
+        setError(err.message || "Registration failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -65,7 +83,7 @@ export default function Register() {
           if (fullName.trim()) await base44.auth.updateMe({ full_name: fullName.trim() });
         } catch { /* non-fatal */ }
       }
-      window.location.href = returnTo;
+      setStep("setup");
     } catch (err) {
       setError(err.message || "Invalid verification code");
     } finally {
@@ -90,7 +108,18 @@ export default function Register() {
     base44.auth.loginWithProvider("google", returnTo);
   };
 
-  if (showOtp) {
+  const handleSetupComplete = async (data) => {
+    try {
+      await base44.entities.CompanySettings.create(data);
+      toast({ title: "Workspace created", description: "Your settings are ready to use." });
+    } catch {
+      toast({ title: "Setup skipped", description: "You can complete it anytime in Settings." });
+    }
+    setStep("ready");
+  };
+
+  // OTP verification step
+  if (step === "otp") {
     return (
       <AuthLayout
         title="Verify your email"
@@ -143,10 +172,54 @@ export default function Register() {
     );
   }
 
+  // Optional onboarding: workspace setup
+  if (step === "setup") {
+    return (
+      <AuthLayout
+        title="Set up your workspace"
+        subtitle="Welcome to MyWork — tell us a little about your business. You can change this anytime in Settings."
+        brandTitle="Start managing your work the smarter way."
+        brandSub="Bring projects, clients, finances, invoices and everything in between into one connected workspace."
+        brandKpis={BRAND_KPIS}
+      >
+        <WorkspaceSetupForm
+          defaultName={fullName.trim()}
+          onComplete={handleSetupComplete}
+          onSkip={() => setStep("ready")}
+        />
+      </AuthLayout>
+    );
+  }
+
+  // Onboarding complete
+  if (step === "ready") {
+    return (
+      <AuthLayout
+        title="You're ready to go."
+        subtitle="Your MyWork workspace is set up. See you inside."
+        brandTitle="Start managing your work the smarter way."
+        brandSub="Bring projects, clients, finances, invoices and everything in between into one connected workspace."
+        brandKpis={BRAND_KPIS}
+      >
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4 flex items-center gap-3 mb-6">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <p className="text-sm text-emerald-700">Account created successfully.</p>
+        </div>
+        <Button
+          className="w-full h-12 font-semibold bg-indigo-600 hover:bg-indigo-700"
+          onClick={() => { window.location.href = returnTo; }}
+        >
+          Go to Dashboard
+        </Button>
+      </AuthLayout>
+    );
+  }
+
+  // Registration form
   return (
     <AuthLayout
       title="Create your MyWork workspace"
-      subtitle="Sign up to get started."
+      subtitle="Get everything your business needs to manage work in one place."
       footer={
         <>
           Already have an account?{" "}
@@ -158,10 +231,22 @@ export default function Register() {
           </Link>
         </>
       }
+      brandTitle="Start managing your work the smarter way."
+      brandSub="Bring projects, clients, finances, invoices and everything in between into one connected workspace."
+      brandKpis={BRAND_KPIS}
     >
       {error && (
         <div role="alert" className="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-100 text-rose-600 text-sm flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" /> {error}
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span className="flex-1">{error}</span>
+          {existsAccount && (
+            <Link
+              to={"/login" + (returnTo !== "/" ? "?returnTo=" + encodeURIComponent(returnTo) : "")}
+              className="shrink-0 inline-flex items-center h-8 px-3 rounded-md bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
       )}
 
@@ -176,7 +261,7 @@ export default function Register() {
               autoFocus
               placeholder="Enter your full name"
               value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              onChange={(e) => { setFullName(e.target.value); setErrors((p) => ({ ...p, fullName: "" })); }}
               aria-invalid={!!errors.fullName}
               className={`pl-10 h-12 bg-white ${errors.fullName ? "border-rose-300 focus-visible:ring-rose-300" : ""}`}
               disabled={loading}
@@ -195,7 +280,7 @@ export default function Register() {
               autoComplete="email"
               placeholder="Enter your email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: "" })); }}
               aria-invalid={!!errors.email}
               className={`pl-10 h-12 bg-white ${errors.email ? "border-rose-300 focus-visible:ring-rose-300" : ""}`}
               disabled={loading}
@@ -214,7 +299,7 @@ export default function Register() {
               autoComplete="new-password"
               placeholder="Create a password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: "" })); }}
               aria-invalid={!!errors.password}
               className={`pl-10 pr-11 h-12 bg-white ${errors.password ? "border-rose-300 focus-visible:ring-rose-300" : ""}`}
               disabled={loading}
@@ -241,7 +326,7 @@ export default function Register() {
               autoComplete="new-password"
               placeholder="Confirm your password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => { setConfirmPassword(e.target.value); setErrors((p) => ({ ...p, confirmPassword: "" })); }}
               aria-invalid={!!errors.confirmPassword}
               className={`pl-10 pr-11 h-12 bg-white ${errors.confirmPassword ? "border-rose-300 focus-visible:ring-rose-300" : ""}`}
               disabled={loading}
@@ -258,16 +343,25 @@ export default function Register() {
           {errors.confirmPassword && <p className="text-xs text-rose-600">{errors.confirmPassword}</p>}
         </div>
 
+        <PasswordStrength password={password} confirmPassword={confirmPassword} />
+
         <Button type="submit" className="w-full h-12 font-semibold bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating account...
+              Creating your account...
             </>
           ) : (
             "Create Account"
           )}
         </Button>
+
+        <p className="text-[11px] text-slate-400 text-center leading-relaxed">
+          By creating an account, you agree to our{" "}
+          <Link to="/terms" className="text-slate-600 underline hover:text-indigo-600">Terms</Link>{" "}
+          and{" "}
+          <Link to="/privacy" className="text-slate-600 underline hover:text-indigo-600">Privacy Policy</Link>.
+        </p>
       </form>
 
       <div className="relative my-6">

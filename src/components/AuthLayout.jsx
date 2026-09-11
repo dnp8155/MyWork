@@ -4,7 +4,14 @@ import { Image } from "@/components/ui/image";
 
 const LOGO_URL = "https://media.base44.com/images/public/6aa4049391d33a443027588d/3321c12ed_ChatGPTImageSep11202607_58_37PM.png";
 
-function BrandPanel() {
+function BrandPanel({ title, sub, kpis }) {
+  const kpiList = kpis || [
+    ["Revenue", "₹12,40,000", "text-white"],
+    ["Expenses", "₹2,85,000", "text-rose-200"],
+    ["Profit", "₹9,55,000", "text-emerald-300"],
+    ["Active Projects", "4", "text-white"],
+    ["Pending Payments", "₹1,85,000", "text-white"],
+  ];
   return (
     <div className="hidden md:flex md:w-[40%] lg:w-[45%] flex-col justify-between relative overflow-hidden bg-gradient-to-b from-indigo-600 via-indigo-700 to-indigo-900 text-white p-10 xl:p-14">
       {/* decorative backdrop */}
@@ -23,10 +30,10 @@ function BrandPanel() {
         </div>
 
         <h2 className="mt-14 text-3xl xl:text-4xl font-extrabold tracking-tight leading-tight">
-          Everything you work on.<br />All in one place.
+          {title || <>Everything you work on.<br />All in one place.</>}
         </h2>
         <p className="mt-4 text-sm text-indigo-100/90 leading-relaxed max-w-sm">
-          Projects, clients, finances, invoices, domains, hosting and more — connected in one powerful workspace.
+          {sub || "Projects, clients, finances, invoices, domains, hosting and more — connected in one powerful workspace."}
         </p>
       </div>
 
@@ -34,28 +41,23 @@ function BrandPanel() {
       <div className="relative mt-10 opacity-90" aria-hidden="true">
         <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md p-5 shadow-2xl">
           <div className="grid grid-cols-3 gap-2.5">
-            {[
-              ["Revenue", "₹12,40,000"],
-              ["Expenses", "₹2,85,000"],
-              ["Profit", "₹9,55,000"],
-            ].map(([l, v]) => (
+            {kpiList.slice(0, 3).map(([l, v, tone]) => (
               <div key={l} className="rounded-xl bg-white/10 px-3 py-2.5">
                 <p className="text-[9px] uppercase tracking-wide text-indigo-100/70">{l}</p>
-                <p className={`text-sm font-bold ${l === "Profit" ? "text-emerald-300" : l === "Expenses" ? "text-rose-200" : "text-white"}`}>{v}</p>
+                <p className={`text-sm font-bold ${tone || "text-white"}`}>{v}</p>
               </div>
             ))}
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2.5">
-            {[
-              ["Active Projects", "4"],
-              ["Pending Payments", "₹1,85,000"],
-            ].map(([l, v]) => (
-              <div key={l} className="rounded-xl bg-white/10 px-3 py-2.5 flex items-center justify-between">
-                <p className="text-[10px] text-indigo-100/80">{l}</p>
-                <p className="text-sm font-bold text-white">{v}</p>
-              </div>
-            ))}
-          </div>
+          {kpiList.length > 3 && (
+            <div className="mt-3 grid grid-cols-2 gap-2.5">
+              {kpiList.slice(3).map(([l, v, tone]) => (
+                <div key={l} className="rounded-xl bg-white/10 px-3 py-2.5 flex items-center justify-between">
+                  <p className="text-[10px] text-indigo-100/80">{l}</p>
+                  <p className={`text-sm font-bold ${tone || "text-white"}`}>{v}</p>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="mt-4 flex items-end gap-1.5 h-16">
             {[45, 70, 52, 85, 60, 95, 74, 88].map((h, i) => (
               <div key={i} className="flex-1 rounded-t bg-white/25" style={{ height: `${h}%` }} />
@@ -70,10 +72,10 @@ function BrandPanel() {
   );
 }
 
-export default function AuthLayout({ title, subtitle, footer, children }) {
+export default function AuthLayout({ title, subtitle, footer, children, brandTitle, brandSub, brandKpis }) {
   return (
     <div className="min-h-screen flex bg-background">
-      <BrandPanel />
+      <BrandPanel title={brandTitle} sub={brandSub} kpis={brandKpis} />
       <div className="flex-1 flex items-center justify-center px-5 sm:px-10 py-12">
         <motion.div
           className="w-full max-w-[420px]"

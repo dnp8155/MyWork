@@ -33,6 +33,8 @@ import Reports from '@/pages/Reports';
 import Notifications from '@/pages/Notifications';
 import Settings from '@/pages/Settings';
 import Landing from '@/pages/Landing';
+import Terms from '@/pages/Terms';
+import Privacy from '@/pages/Privacy';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -61,6 +63,8 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/landing" element={<Landing />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
