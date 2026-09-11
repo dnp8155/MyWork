@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
+import NotificationBell from "@/components/NotificationBell";
 import {
   LayoutDashboard, FolderKanban, Users, Server, FileText, Receipt,
-  Globe, HardDrive, BarChart3, Bell, Settings as SettingsIcon,
+  Globe, HardDrive, BarChart3, Settings as SettingsIcon,
   Menu, X, LogOut, Search, KeyRound
 } from "lucide-react";
 
@@ -20,7 +21,6 @@ const navItems = [
   { to: "/hosting", label: "Hosting", icon: HardDrive },
   { to: "/finance", label: "Finance", icon: BarChart3 },
   { to: "/reports", label: "Reports", icon: BarChart3 },
-  { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
@@ -102,9 +102,7 @@ export default function Layout() {
             </button>
             <GlobalSearch />
           </div>
-          <Link to="/notifications" className="relative text-slate-600 hover:text-slate-900">
-            <Bell className="w-5 h-5" />
-          </Link>
+          <NotificationBell />
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-x-hidden">
           <Outlet />
