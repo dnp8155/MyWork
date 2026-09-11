@@ -9,9 +9,11 @@ import StatCard from "@/components/StatCard";
 import Modal from "@/components/Modal";
 import { Input, Select, Textarea } from "@/components/FormFields";
 import { useToast } from "@/components/ui/use-toast";
+import CredentialForm, { CATEGORY_STYLES } from "@/components/credentials/CredentialForm";
 import {
   ArrowLeft, Wallet, TrendingUp, TrendingDown, Clock, Percent,
   Plus, Globe, HardDrive, Server, FileText, Receipt, History,
+  KeyRound, Eye, EyeOff, Pencil, Trash2,
 } from "lucide-react";
 
 const TABS = [
@@ -24,15 +26,19 @@ const TABS = [
   { key: "domain", label: "Domain" },
   { key: "hosting", label: "Hosting" },
   { key: "base44", label: "Base44" },
+  { key: "credentials", label: "Credentials" },
   { key: "activity", label: "Activity" },
 ];
 
 export default function ProjectDetail() {
   const { id } = useParams();
-  const { projects, clients, base44Accounts, payments, expenses, quotations, invoices, domains, hosting, recurringSchedules, auditLogs, loading, refresh } = useAppData();
+  const { projects, clients, base44Accounts, credentials, payments, expenses, quotations, invoices, domains, hosting, recurringSchedules, auditLogs, loading, refresh } = useAppData();
   const [tab, setTab] = useState("overview");
   const [payModal, setPayModal] = useState(false);
   const [expenseModal, setExpenseModal] = useState(false);
+  const [credModal, setCredModal] = useState(false);
+  const [editingCred, setEditingCred] = useState(null);
+  const [credRevealed, setCredRevealed] = useState({});
   const { toast } = useToast();
 
   const project = (projects || []).find((p) => p.id === id);
@@ -49,6 +55,14 @@ export default function ProjectDetail() {
   const projectSchedules = (recurringSchedules || []).filter((s) => s.project_id === id).sort((a, b) => (a.due_date || "").localeCompare(b.due_date || ""));
   const projectActivity = (auditLogs || []).filter((a) => a.entity_id === id);
   const base44Account = (base44Accounts || []).find((a) => a.id === project.base44_account_id);
+  const projectCredentials = (credentials || []).filter((c) => c.project_id === id);
+  const deleteCredential = async (c) => {
+    if (!window.confirm(`Delete credential "${c.title}"?`)) return;
+    await base44.entities.Credential.delete(c.id);
+    await base44.entities.AuditLog.create({ action: "deleted", entity: "Credential", entity_id: c.id, description: `Deleted credential "${c.title}"` });
+    refresh();
+    toast({ title: "Credential deleted" });
+  };
 
   return (
     <div>
@@ -278,6 +292,52 @@ export default function ProjectDetail() {
         </Section>
       )}
 
+      {tab === "credentials" && (
+        <Section
+          title="Project Credentials"
+          action={
+            <button onClick={() => { setEditingCred(null); setCredModal(true); }} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg">
+              <Plus className="w-4 h-4" /> Add Credential
+            </button>
+          }
+        >
+          {projectCredentials.length === 0 ? (
+            <p className="text-sm text-slate-400">No credentials stored for this project yet. Add domain, hosting, Google or any other account login.</p>
+          ) : (
+            <div className="space-y-2">
+              {projectCredentials.map((c) => (
+                <div key={c.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-slate-200">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <KeyRound className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-slate-800 flex items-center gap-2">
+                        {c.title}
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${CATEGORY_STYLES[c.category] || CATEGORY_STYLES.other}`}>{c.category}</span>
+                      </div>
+                      <div className="text-xs text-slate-400 truncate">
+                        {c.username} • {credRevealed[c.id] ? c.password : "••••••••"}
+                        {c.login_url && <> • <a href={c.login_url} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">{c.login_url}</a></>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => setCredRevealed((r) => ({ ...r, [c.id]: !r[c.id] }))} className="p-1.5 text-slate-400 hover:text-slate-600 rounded">
+                      {credRevealed[c.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    <button onClick={() => { setEditingCred(c); setCredModal(true); }} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded" title="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => deleteCredential(c)} className="p-1.5 text-slate-400 hover:text-rose-600 rounded" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Section>
+      )}
+
       {tab === "activity" && (
         <Section title="Activity / Audit History">
           {projectActivity.length === 0 ? <p className="text-sm text-slate-400">No activity recorded.</p> : (
@@ -292,6 +352,15 @@ export default function ProjectDetail() {
       )}
 
       {payModal && <PaymentModal project={project} onClose={() => setPayModal(false)} onSaved={() => { setPayModal(false); refresh(); toast({ title: "Payment recorded" }); }} />}
+      {credModal && (
+        <CredentialForm
+          credential={editingCred}
+          fixedProjectId={project.id}
+          projects={projects}
+          onClose={() => { setCredModal(false); setEditingCred(null); }}
+          onSaved={() => { setCredModal(false); setEditingCred(null); refresh(); toast({ title: editingCred ? "Credential updated" : "Credential added" }); }}
+        />
+      )}
       {expenseModal && <ExpenseModal project={project} onClose={() => setExpenseModal(false)} onSaved={() => { setExpenseModal(false); refresh(); toast({ title: "Expense added" }); }} />}
     </div>
   );

@@ -18,6 +18,7 @@ import ProjectDetail from '@/pages/ProjectDetail';
 import Clients from '@/pages/Clients';
 import ClientDetail from '@/pages/ClientDetail';
 import Base44Accounts from '@/pages/Base44Accounts';
+import Credentials from '@/pages/Credentials';
 import Quotations from '@/pages/Quotations';
 import Invoices from '@/pages/Invoices';
 import Payments from '@/pages/Payments';
@@ -67,6 +68,7 @@ const AuthenticatedApp = () => {
           <Route path="/clients" element={<Clients />} />
           <Route path="/clients/:id" element={<ClientDetail />} />
           <Route path="/base44-accounts" element={<Base44Accounts />} />
+          <Route path="/credentials" element={<Credentials />} />
           <Route path="/quotations" element={<Quotations />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/payments" element={<Payments />} />

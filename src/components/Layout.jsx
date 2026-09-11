@@ -5,7 +5,7 @@ import { Image } from "@/components/ui/image";
 import {
   LayoutDashboard, FolderKanban, Users, Server, FileText, Receipt, Wallet,
   CreditCard, Globe, HardDrive, BarChart3, Bell, Settings as SettingsIcon,
-  Menu, X, LogOut, Search
+  Menu, X, LogOut, Search, KeyRound
 } from "lucide-react";
 
 const navItems = [
@@ -13,6 +13,7 @@ const navItems = [
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/clients", label: "Clients", icon: Users },
   { to: "/base44-accounts", label: "Base44 Accounts", icon: Server },
+  { to: "/credentials", label: "Credentials", icon: KeyRound },
   { to: "/quotations", label: "Quotations", icon: FileText },
   { to: "/invoices", label: "Invoices", icon: Receipt },
   { to: "/payments", label: "Payments", icon: Wallet },
