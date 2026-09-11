@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import NotificationBell from "@/components/NotificationBell";
 import {
-  LayoutDashboard, FolderKanban, Users, Server, FileText, Receipt,
+  LayoutDashboard, FolderKanban, Users, Server, FileText, Receipt, Share2,
   Globe, HardDrive, BarChart3, Settings as SettingsIcon,
   Menu, X, LogOut, Search, KeyRound, PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
@@ -12,6 +12,7 @@ import {
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/projects", label: "Projects", icon: FolderKanban },
+  { to: "/shared-projects", label: "Shared Projects", icon: Share2 },
   { to: "/clients", label: "Clients", icon: Users },
   { to: "/base44-accounts", label: "Base44 Accounts", icon: Server },
   { to: "/credentials", label: "Credentials", icon: KeyRound },
