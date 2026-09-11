@@ -53,16 +53,18 @@ export default function Projects() {
           {filtered.map((p) => {
             const f = computeProjectFinancials(p, payments, expenses);
             return (
-              <div key={p.id} onClick={() => navigate(`/projects/${p.id}`)} className="aspect-square bg-white rounded-xl border border-slate-200 p-4 flex flex-col hover:border-slate-300 hover:shadow-sm transition cursor-pointer">
-                <div className="flex items-start justify-between mb-3">
+              <div key={p.id} onClick={() => navigate(`/projects/${p.id}`)} className="aspect-square bg-white rounded-xl border border-slate-200 p-4 flex flex-col hover:border-slate-300 hover:shadow-sm transition cursor-pointer overflow-hidden">
+                <div className="relative -mx-4 -mt-4 mb-3 h-24 bg-slate-100 overflow-hidden">
                   {p.logo ? (
-                    <Image src={p.logo} className="w-10 h-10 rounded-lg" fittingType="fill" />
+                    <Image src={p.logo} className="w-full h-full" fittingType="fill" />
                   ) : (
-                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-500">
+                    <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-slate-300">
                       {(p.name || "?").charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <StatusBadge status={p.status} />
+                  <div className="absolute top-2 right-2">
+                    <StatusBadge status={p.status} />
+                  </div>
                 </div>
                 <div className="font-semibold text-slate-900 text-sm line-clamp-2">{p.name}</div>
                 <div className="text-xs text-slate-400">{p.project_number}</div>
