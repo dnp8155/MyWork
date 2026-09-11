@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { Image } from "@/components/ui/image";
 import {
   LayoutDashboard, FolderKanban, Users, Server, FileText, Receipt, Wallet,
   CreditCard, Globe, HardDrive, BarChart3, Bell, Settings as SettingsIcon,
-  Menu, X, LogOut, Search, Building2
+  Menu, X, LogOut, Search
 } from "lucide-react";
 
 const navItems = [
@@ -45,14 +46,13 @@ export default function Layout() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        <div className="h-16 flex items-center gap-2 px-5 border-b border-slate-800">
-          <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <div className="text-white font-semibold text-sm leading-tight">DevAgency</div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Business Suite</div>
-          </div>
+        <div className="h-16 flex items-center px-5 border-b border-slate-800">
+          <Image
+            src="https://media.base44.com/images/public/6aa4049391d33a443027588d/9dbdc9e2e_ChatGPTImageSep11202607_28_47PM.png"
+            fittingType="fit"
+            className="h-10 w-36"
+            alt="MeWork"
+          />
         </div>
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
           {navItems.map((item) => (
