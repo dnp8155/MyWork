@@ -14,7 +14,7 @@ const navItems = [
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/shared-projects", label: "Shared Projects", icon: Share2 },
   { to: "/clients", label: "Clients", icon: Users },
-  { to: "/base44-accounts", label: "Base44 Accounts", icon: Server },
+  { to: "/base44-accounts", label: "Accounts", icon: Server },
   { to: "/credentials", label: "Credentials", icon: KeyRound },
   { to: "/quotations", label: "Quotations", icon: FileText },
   { to: "/invoices", label: "Invoices", icon: Receipt },

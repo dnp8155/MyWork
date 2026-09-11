@@ -41,7 +41,7 @@ export default function Base44Accounts() {
   return (
     <div>
       <PageHeader
-        title="Base44 Accounts"
+        title="Accounts"
         subtitle="Manage your Base44 account credentials"
         actions={
           <button onClick={() => { setEditing(null); setModalOpen(true); }} className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
