@@ -23,6 +23,7 @@ function Section({ title, icon: Icon, children }) {
 export default function ProjectForm({ clients, base44Accounts, existing, expenses = [], onClose, onSaved }) {
   const [form, setForm] = useState({
     logo: "", name: "", client_id: "", contact_name: "", contact_number: "",
+    client_email: "", client_address: "", company_name: "",
     base44_account_id: "", base44_project_url: "", status: "pending",
     project_type: "fixed", total_amount: 0, monthly_amount: 0,
     number_of_months: 1, payment_due_day: 1, recurring_start_date: "",
@@ -36,19 +37,6 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const setD = (k, v) => setDomain((d) => ({ ...d, [k]: v }));
   const setH = (k, v) => setHosting((h) => ({ ...h, [k]: v }));
-
-  const onClientChange = (clientId) => {
-    const c = clients.find((x) => x.id === clientId);
-    setForm((f) => ({
-      ...f,
-      client_id: clientId,
-      contact_name: c?.name || f.contact_name,
-      contact_number: c?.phone || f.contact_number,
-      client_email: c?.email || "",
-      client_address: c?.address || "",
-      company_name: c?.company_name || "",
-    }));
-  };
 
   const uploadLogo = async (e) => {
     const file = e.target.files?.[0];
@@ -68,11 +56,10 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
     e.preventDefault();
     setSaving(true);
     try {
-      const client = clients.find((c) => c.id === form.client_id);
       const year = new Date().getFullYear();
       const project_number = nextNumber("PRJ", year, existing);
       const salaried = form.project_type === "recurring";
-      const contactName = form.contact_name || client?.name || "";
+      const contactName = form.contact_name || "";
       const total = salaried
         ? (Number(form.monthly_amount) || 0) * (Number(form.number_of_months) || 0)
         : Number(form.total_amount) || 0;
@@ -89,10 +76,10 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
         project_number,
         client_id: form.client_id,
         client_name: contactName,
-        company_name: form.company_name || client?.company_name || "",
-        client_email: form.client_email || client?.email || "",
-        client_phone: form.contact_number || client?.phone || "",
-        client_address: form.client_address || client?.address || "",
+        company_name: form.company_name || "",
+        client_email: form.client_email || "",
+        client_phone: form.contact_number || "",
+        client_address: form.client_address || "",
         description: form.description,
         status: form.status,
         start_date: form.start_date,
@@ -225,13 +212,14 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
               </label>
             </div>
             <Input label="Project Name" required value={form.name} onChange={(e) => set("name", e.target.value)} />
-            <Select label="Client" required value={form.client_id} onChange={(e) => onClientChange(e.target.value)}>
-              <option value="">Select client</option>
-              {clients.map((c) => <option key={c.id} value={c.id}>{c.name} {c.company_name ? `(${c.company_name})` : ""}</option>)}
-            </Select>
+            <Input label="Client Name" required value={form.contact_name} onChange={(e) => set("contact_name", e.target.value)} />
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Contact Name" value={form.contact_name} onChange={(e) => set("contact_name", e.target.value)} />
               <Input label="Contact Number" value={form.contact_number} onChange={(e) => set("contact_number", e.target.value)} />
+              <Input label="Company Name" value={form.company_name} onChange={(e) => set("company_name", e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Client Email" type="email" value={form.client_email} onChange={(e) => set("client_email", e.target.value)} />
+              <Input label="Client Address" value={form.client_address} onChange={(e) => set("client_address", e.target.value)} />
             </div>
             <Select label="Base44 Account" value={form.base44_account_id} onChange={(e) => set("base44_account_id", e.target.value)}>
               <option value="">None</option>
