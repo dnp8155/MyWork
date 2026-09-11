@@ -1,15 +1,14 @@
 import React, { useState } from "react";
 import { useAppData } from "@/hooks/useAppData";
 import { base44 } from "@/api/base44Client";
-import { computeProjectFinancials, projectTotalValue, nextNumber, formatCurrency } from "@/lib/finance";
+import { computeProjectFinancials, nextNumber, formatCurrency } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
-import StatCard from "@/components/StatCard";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
 import Modal from "@/components/Modal";
 import { Input, Textarea, Select } from "@/components/FormFields";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, FolderKanban, Wallet, TrendingUp, Clock } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Projects() {
@@ -25,10 +24,6 @@ export default function Projects() {
     .filter((p) => !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.client_name?.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => (b.created_date || "").localeCompare(a.created_date || ""));
 
-  const totalValue = (projects || []).reduce((s, p) => s + projectTotalValue(p), 0);
-  const totalReceived = (projects || []).reduce((s, p) => s + computeProjectFinancials(p, payments, expenses).received, 0);
-  const totalPending = Math.max(totalValue - totalReceived, 0);
-
   return (
     <div>
       <PageHeader
@@ -40,13 +35,6 @@ export default function Projects() {
           </button>
         }
       />
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Total Projects" value={projects?.length || 0} icon={FolderKanban} tone="indigo" isCurrency={false} />
-        <StatCard label="Total Value" value={totalValue} icon={Wallet} tone="blue" />
-        <StatCard label="Total Received" value={totalReceived} icon={TrendingUp} tone="green" />
-        <StatCard label="Total Pending" value={totalPending} icon={Clock} tone="amber" />
-      </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects…" className="px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-indigo-400 focus:outline-none flex-1" />
