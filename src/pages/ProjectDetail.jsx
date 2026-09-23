@@ -43,6 +43,7 @@ export default function ProjectDetail() {
   const [editModal, setEditModal] = useState(false);
   const [editingCred, setEditingCred] = useState(null);
   const [credRevealed, setCredRevealed] = useState({});
+  const [editingPayment, setEditingPayment] = useState(null);
   const { toast } = useToast();
 
   const project = (projects || []).find((p) => p.id === id);
@@ -66,6 +67,14 @@ export default function ProjectDetail() {
     await base44.entities.AuditLog.create({ action: "deleted", entity: "Credential", entity_id: c.id, description: `Deleted credential "${c.title}"` });
     refresh();
     toast({ title: "Credential deleted" });
+  };
+  const deletePayment = async (p) => {
+    if (!window.confirm(`Delete payment ${p.payment_number || ""} of ${formatCurrency(p.amount)}?`)) return;
+    await base44.entities.Payment.delete(p.id);
+    await base44.entities.Transaction.deleteMany({ source_entity: "payment", source_id: p.id });
+    await base44.entities.AuditLog.create({ action: "payment_deleted", entity: "Project", entity_id: id, description: `Deleted payment of ${formatCurrency(p.amount)} from ${project.name}` });
+    refresh();
+    toast({ title: "Payment deleted" });
   };
 
   return (
@@ -165,7 +174,7 @@ export default function ProjectDetail() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <p className="text-sm text-slate-500">Complete money tracking — total value, received, remaining, expenses and profit in one place.</p>
             <div className="flex items-center gap-2">
-              <button onClick={() => setPayModal(true)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+              <button onClick={() => { setEditingPayment(null); setPayModal(true); }} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                 <Plus className="w-4 h-4" /> Record Payment
               </button>
               <button onClick={() => setExpenseModal(true)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
@@ -193,6 +202,7 @@ export default function ProjectDetail() {
                   <th className="text-left px-3 py-2 font-medium text-slate-600">Method</th>
                   <th className="text-left px-3 py-2 font-medium text-slate-600">Reference</th>
                   <th className="text-right px-3 py-2 font-medium text-slate-600">Amount</th>
+                  <th className="text-right px-3 py-2 font-medium text-slate-600">Actions</th>
                 </tr></thead>
                 <tbody className="divide-y divide-slate-100">
                   {projectPayments.map((p) => (
@@ -202,6 +212,12 @@ export default function ProjectDetail() {
                       <td className="px-3 py-2 capitalize">{p.payment_method?.replace("_", " ")}</td>
                       <td className="px-3 py-2 text-slate-500">{p.reference || "—"}</td>
                       <td className="px-3 py-2 text-right text-emerald-600 font-medium">{formatCurrency(p.amount)}</td>
+                      <td className="px-3 py-2 text-right">
+                        <div className="inline-flex items-center gap-1">
+                          <button onClick={() => { setEditingPayment(p); setPayModal(true); }} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded" title="Edit"><Pencil className="w-4 h-4" /></button>
+                          <button onClick={() => deletePayment(p)} className="p-1.5 text-slate-400 hover:text-rose-600 rounded" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -434,7 +450,14 @@ export default function ProjectDetail() {
           onSaved={() => { setEditModal(false); refresh(); toast({ title: "Project updated" }); }}
         />
       )}
-      {payModal && <PaymentModal project={project} onClose={() => setPayModal(false)} onSaved={() => { setPayModal(false); refresh(); toast({ title: "Payment recorded" }); }} />}
+      {payModal && (
+        <PaymentModal
+          project={project}
+          payment={editingPayment}
+          onClose={() => { setPayModal(false); setEditingPayment(null); }}
+          onSaved={() => { setPayModal(false); setEditingPayment(null); refresh(); toast({ title: editingPayment ? "Payment updated" : "Payment recorded" }); }}
+        />
+      )}
       {credModal && (
         <CredentialForm
           credential={editingCred}
@@ -468,18 +491,38 @@ function Row({ label, value, tone }) {
   return <div className="flex items-center justify-between"><span className="text-slate-500">{label}</span><span className={`font-medium ${tones[tone] || "text-slate-800"}`}>{value}</span></div>;
 }
 
-function PaymentModal({ project, onClose, onSaved }) {
-  const [form, setForm] = useState({ date: new Date().toISOString().slice(0, 10), amount: "", payment_method: "bank_transfer", reference: "", notes: "" });
+function PaymentModal({ project, payment, onClose, onSaved }) {
+  const editing = !!payment;
+  const [form, setForm] = useState(() => editing ? {
+    date: payment.date || new Date().toISOString().slice(0, 10),
+    amount: payment.amount ?? "",
+    payment_method: payment.payment_method || "bank_transfer",
+    reference: payment.reference || "",
+    notes: payment.notes || "",
+  } : { date: new Date().toISOString().slice(0, 10), amount: "", payment_method: "bank_transfer", reference: "", notes: "" });
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const submit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
+      if (editing) {
+        await base44.entities.Payment.update(payment.id, {
+          date: form.date, amount: Number(form.amount), payment_method: form.payment_method,
+          reference: form.reference, notes: form.notes,
+        });
+        const txns = await base44.entities.Transaction.filter({ source_entity: "payment", source_id: payment.id });
+        for (const t of txns) {
+          await base44.entities.Transaction.update(t.id, { date: form.date, amount: Number(form.amount), payment_method: form.payment_method, reference: form.reference });
+        }
+        await base44.entities.AuditLog.create({ action: "payment_updated", entity: "Project", entity_id: project.id, description: `Updated payment of ${formatCurrency(form.amount)} for ${project.name}` });
+        onSaved();
+        return;
+      }
       const year = new Date().getFullYear();
       const existing = await base44.entities.Payment.list();
       const payment_number = `PAY-${year}-${String(existing.length + 1).padStart(4, "0")}`;
-      const payment = await base44.entities.Payment.create({
+      const created = await base44.entities.Payment.create({
         ...form, amount: Number(form.amount), payment_number,
         client_id: project.client_id, client_name: project.client_name,
         project_id: project.id, project_name: project.name, type: "project",
@@ -488,14 +531,14 @@ function PaymentModal({ project, onClose, onSaved }) {
         transaction_number: `TXN-${Date.now()}`, date: form.date, type: "income", category: "project_payment",
         amount: Number(form.amount), project_id: project.id, project_name: project.name,
         client_id: project.client_id, client_name: project.client_name, payment_method: form.payment_method,
-        reference: form.reference, description: `Payment for ${project.name}`, source_entity: "payment", source_id: payment.id,
+        reference: form.reference, description: `Payment for ${project.name}`, source_entity: "payment", source_id: created.id,
       });
       await base44.entities.AuditLog.create({ action: "payment_recorded", entity: "Project", entity_id: project.id, description: `Recorded payment of ${formatCurrency(form.amount)} for ${project.name}` });
       onSaved();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };
   return (
-    <Modal open onClose={onClose} title="Record Payment">
+    <Modal open onClose={onClose} title={editing ? "Edit Payment" : "Record Payment"}>
       <form onSubmit={submit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <Input label="Date" type="date" required value={form.date} onChange={(e) => set("date", e.target.value)} />
@@ -511,7 +554,7 @@ function PaymentModal({ project, onClose, onSaved }) {
         <Textarea label="Notes" value={form.notes} onChange={(e) => set("notes", e.target.value)} />
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-          <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg disabled:opacity-50">{saving ? "Saving…" : "Record"}</button>
+          <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg disabled:opacity-50">{saving ? "Saving…" : editing ? "Save Changes" : "Record"}</button>
         </div>
       </form>
     </Modal>
