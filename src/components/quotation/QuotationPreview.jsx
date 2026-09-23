@@ -29,16 +29,16 @@ export default function QuotationPreview({ quote, settings, onClose, onApprove }
           .qp-header{height:55mm;position:relative;overflow:hidden;color:#fff;padding:8mm 10mm;
             background:radial-gradient(circle at 12% 80%,rgba(0,212,255,.2),transparent 28%),radial-gradient(circle at 80% 20%,rgba(0,126,255,.18),transparent 30%),linear-gradient(135deg,#061b36 0%,#04284d 50%,#03162d 100%)}
           .qp-header-inner{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;height:100%}
-          .qp-brand{display:flex;align-items:center;gap:6mm}
-          .qp-logo{width:36mm;height:28mm;object-fit:contain;filter:drop-shadow(0 0 10px rgba(0,207,255,.35))}
-          .qp-brand-name{font-family:'Montserrat',Arial,sans-serif;font-size:13mm;line-height:.9;font-weight:900;letter-spacing:.5px}
+          .qp-brand{display:flex;align-items:center;gap:5mm;min-width:0;flex:1}
+          .qp-logo{width:26mm;height:22mm;object-fit:contain;filter:drop-shadow(0 0 10px rgba(0,207,255,.35));flex:none}
+          .qp-brand-name{font-family:'Montserrat',Arial,sans-serif;font-size:8.5mm;line-height:1;font-weight:900;letter-spacing:.3px;word-break:break-word}
           .qp-brand-name .blue{color:#08d8ff}
-          .qp-tagline{margin-top:3mm;font-size:3mm;letter-spacing:2.8px;color:#fff}
-          .qp-services{margin-top:2mm;font-size:2.6mm;letter-spacing:1.1px;color:#dcecff}
-          .qp-side{width:43mm;padding-left:6mm;border-left:1px solid rgba(255,255,255,.25);font-size:3.2mm;line-height:1.5;text-transform:uppercase;letter-spacing:1.2px}
+          .qp-tagline{margin-top:2.5mm;font-size:2.8mm;letter-spacing:2.4px;color:#fff}
+          .qp-services{margin-top:1.8mm;font-size:2.5mm;letter-spacing:.9px;color:#dcecff}
+          .qp-side{width:auto;max-width:48mm;flex:none;padding-left:5mm;border-left:1px solid rgba(255,255,255,.25);font-size:3mm;line-height:1.5;text-transform:uppercase;letter-spacing:1px}
           .qp-side b{color:#ffbd18}
-          .qp-content{padding:8mm}
-          .qp-title-row{display:flex;justify-content:space-between;gap:8mm;align-items:flex-start;margin-bottom:6mm}
+          .qp-content{padding:8mm 8mm 0}
+          .qp-title-row{display:flex;justify-content:space-between;gap:8mm;align-items:flex-start;margin-bottom:7mm}
           .qp-h1{margin:0;font-family:'Montserrat',Arial,sans-serif;font-size:14mm;line-height:.95;font-weight:900;letter-spacing:-.8px;color:#09233f}
           .qp-h1 span{color:#0878ed}
           .qp-accent{width:34mm;height:1.3mm;margin-top:3mm;background:linear-gradient(90deg,#087ff5 0 65%,#ffb000 65%);border-radius:5px}
@@ -85,10 +85,8 @@ export default function QuotationPreview({ quote, settings, onClose, onApprove }
             <div className="qp-brand">
               {co.logo ? (
                 <img src={co.logo} className="qp-logo" alt="logo" />
-              ) : (
-                <div className="qp-brand-name"><span className="blue">{(co.company_name || "MeWork").slice(0,1)}</span>{(co.company_name || "MeWork").slice(1)}</div>
-              )}
-              <div>
+              ) : null}
+              <div style={{ minWidth: 0 }}>
                 <div className="qp-brand-name"><span className="blue">{(co.company_name || "MeWork").split(" ")[0]}</span>{(co.company_name || "MeWork").split(" ").slice(1).join(" ")}</div>
                 <div className="qp-tagline">SOFTWARE &amp; DIGITAL SOLUTIONS</div>
                 <div className="qp-services">Web · App · Cloud · Automation · Branding</div>
@@ -126,7 +124,7 @@ export default function QuotationPreview({ quote, settings, onClose, onApprove }
               <div className="qp-card-head">BILL TO</div>
               <div className="qp-card-body">
                 <div className="qp-info-row"><b>Client</b><span className="colon">:</span><span>{quote.client_name || "—"}</span></div>
-                <div className="qp-info-row"><b>Company</b><span className="colon">:</span><span>{quote.client_company || co.company_name || "—"}</span></div>
+                <div className="qp-info-row"><b>Company</b><span className="colon">:</span><span>{quote.client_company || "—"}</span></div>
                 <div className="qp-info-row"><b>Email</b><span className="colon">:</span><span>{quote.client_email || "—"}</span></div>
                 <div className="qp-info-row"><b>Phone</b><span className="colon">:</span><span>{quote.client_phone || "—"}</span></div>
                 <div className="qp-info-row"><b>Address</b><span className="colon">:</span><span>{quote.client_address || "—"}</span></div>
