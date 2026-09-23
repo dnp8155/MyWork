@@ -2,36 +2,40 @@ import React, { useState } from "react";
 import { useAppData } from "@/hooks/useAppData";
 import { base44 } from "@/api/base44Client";
 import PageHeader from "@/components/PageHeader";
-import StatCard from "@/components/StatCard";
 import EmptyState from "@/components/EmptyState";
 import Modal from "@/components/Modal";
-import { Input, fieldClass } from "@/components/FormFields";
-import { Plus, Server, Eye, EyeOff, Copy, Check, Pencil, Trash2, RefreshCw } from "lucide-react";
+import { Input, Select, Textarea, fieldClass } from "@/components/FormFields";
+import { Plus, Eye, EyeOff, Copy, Check, Pencil, Trash2, RefreshCw, Server, Database, Github, Globe } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+
+const CATEGORIES = [
+  { key: "base44", label: "Base44", icon: Server, tint: "bg-indigo-100 text-indigo-600", dot: "bg-indigo-500" },
+  { key: "supabase", label: "Supabase", icon: Database, tint: "bg-emerald-100 text-emerald-600", dot: "bg-emerald-500" },
+  { key: "github", label: "GitHub", icon: Github, tint: "bg-slate-200 text-slate-700", dot: "bg-slate-700" },
+  { key: "vercel", label: "Vercel", icon: Globe, tint: "bg-slate-900 text-white", dot: "bg-slate-900" },
+];
+
+const catOf = (a) => a.category || "base44";
 
 export default function Base44Accounts() {
   const { base44Accounts, loading, refresh } = useAppData();
+  const [active, setActive] = useState("base44");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [revealed, setRevealed] = useState({});
-  const [copied, setCopied] = useState("");
   const { toast } = useToast();
 
-  const toggleReveal = (id) => setRevealed((r) => ({ ...r, [id]: !r[id] }));
-
-  const copy = async (text, key) => {
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(key);
-      setTimeout(() => setCopied(""), 1500);
-    } catch (e) { /* clipboard unavailable */ }
-  };
+  const accounts = base44Accounts || [];
+  const counts = CATEGORIES.reduce((acc, c) => {
+    acc[c.key] = accounts.filter((a) => catOf(a) === c.key).length;
+    return acc;
+  }, {});
+  const list = accounts.filter((a) => catOf(a) === active).sort((a, b) => (b.created_date || "").localeCompare(a.created_date || ""));
+  const activeMeta = CATEGORIES.find((c) => c.key === active);
 
   const handleDelete = async (a) => {
     if (!window.confirm(`Delete account "${a.account_name}"?`)) return;
     await base44.entities.Base44Account.delete(a.id);
-    await base44.entities.AuditLog.create({ action: "deleted", entity: "Base44Account", entity_id: a.id, description: `Deleted Base44 account ${a.account_name}` });
+    await base44.entities.AuditLog.create({ action: "deleted", entity: "Base44Account", entity_id: a.id, description: `Deleted ${catOf(a)} account ${a.account_name}` });
     refresh();
     toast({ title: "Account deleted" });
   };
@@ -42,80 +46,63 @@ export default function Base44Accounts() {
     <div>
       <PageHeader
         title="Accounts"
-        subtitle="Manage your Base44 account credentials"
+        subtitle="Manage your Base44, Supabase, GitHub and Vercel accounts — category-wise."
         actions={
           <button onClick={() => { setEditing(null); setModalOpen(true); }} className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
             <Plus className="w-4 h-4" /> Add Account
           </button>
         }
       />
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <StatCard label="Total Accounts" value={base44Accounts?.length || 0} icon={Server} tone="indigo" isCurrency={false} />
-      </div>
-      {loading ? (
-        <div className="h-64 bg-slate-100 rounded-xl animate-pulse" />
-      ) : (base44Accounts || []).length === 0 ? (
-        <EmptyState title="No Base44 accounts" message="Add a Base44 account with its name, email and password." />
-      ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Name</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Email</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Password</th>
-                  <th className="text-right px-4 py-3 font-semibold text-slate-600">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {(base44Accounts || []).map((a) => (
-                  <tr key={a.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                          <Server className="w-4 h-4" />
-                        </div>
-                        <span className="font-medium text-slate-800">{a.account_name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button onClick={() => copy(a.account_email, `e-${a.id}`)} className="flex items-center gap-1.5 text-slate-600 hover:text-indigo-600 group">
-                        <span className="truncate max-w-[220px]">{a.account_email || "—"}</span>
-                        {copied === `e-${a.id}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100" />}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-600 font-mono">{revealed[a.id] ? a.password || "—" : "••••••••"}</span>
-                        <button onClick={() => toggleReveal(a.id)} className="text-slate-400 hover:text-slate-600">
-                          {revealed[a.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                        <button onClick={() => copy(a.password, `p-${a.id}`)} className="text-slate-400 hover:text-slate-600">
-                          {copied === `p-${a.id}` ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => { setEditing(a); setModalOpen(true); }} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded" title="Edit">
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleDelete(a)} className="p-1.5 text-slate-400 hover:text-rose-600 rounded" title="Delete">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5">
+        {/* Left category panel — fixed height, scrolls internally */}
+        <aside className="lg:sticky lg:top-24 lg:h-[calc(100vh-7.5rem)] lg:overflow-y-auto bg-white rounded-xl border border-slate-200 p-3">
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide px-2 mb-2">Categories</p>
+          <nav className="space-y-1 lg:max-h-none max-h-60 overflow-y-auto">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                onClick={() => setActive(c.key)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  active === c.key ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                <span className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${active === c.key ? "bg-white/20 text-white" : c.tint}`}>
+                  <c.icon className="w-3.5 h-3.5" />
+                </span>
+                <span className="flex-1 text-left">{c.label}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${active === c.key ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>{counts[c.key]}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Right — accounts of selected category */}
+        <div className="min-w-0">
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-40 bg-slate-100 rounded-xl animate-pulse" />)}
+            </div>
+          ) : list.length === 0 ? (
+            <EmptyState
+              title={`No ${activeMeta.label} accounts`}
+              message={`Add a ${activeMeta.label} account to link with your projects.`}
+              action={<button onClick={() => { setEditing(null); setModalOpen(true); }} className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg">Add {activeMeta.label} Account</button>}
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {list.map((a) => (
+                <AccountCard key={a.id} account={a} meta={activeMeta} onEdit={() => { setEditing(a); setModalOpen(true); }} onDelete={() => handleDelete(a)} />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
       {modalOpen && (
         <AccountForm
           account={editing}
+          defaultCategory={active}
           onClose={closeForm}
           onSaved={() => { closeForm(); refresh(); toast({ title: editing ? "Account updated" : "Account created" }); }}
         />
@@ -124,36 +111,119 @@ export default function Base44Accounts() {
   );
 }
 
-function AccountForm({ account, onClose, onSaved }) {
-  const [form, setForm] = useState(account || { account_name: "", account_email: "", password: "" });
-  const [showPassword, setShowPassword] = useState(false);
+function SecretRow({ label, value, id }) {
+  const [revealed, setRevealed] = useState(false);
+  const [copied, setCopied] = useState(false);
+  if (!value) return null;
+  const copy = async () => { try { await navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch (e) { /* noop */ } };
+  return (
+    <div className="flex items-center justify-between gap-2 text-xs">
+      <span className="text-slate-400">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="font-mono text-slate-600 truncate max-w-[140px]">{revealed ? value : "••••••••"}</span>
+        <button onClick={() => setRevealed((r) => !r)} className="text-slate-400 hover:text-slate-600">{revealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}</button>
+        <button onClick={copy} className="text-slate-400 hover:text-indigo-600">{copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}</button>
+      </div>
+    </div>
+  );
+}
+
+function AccountCard({ account, meta, onEdit, onDelete }) {
+  const a = account;
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <div className="flex items-start gap-3">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${meta.tint}`}>
+          <meta.icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold text-slate-800 truncate">{a.account_name}</div>
+          {a.account_email && <div className="text-xs text-slate-500 truncate">{a.account_email}</div>}
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button onClick={onEdit} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded" title="Edit"><Pencil className="w-4 h-4" /></button>
+          <button onClick={onDelete} className="p-1.5 text-slate-400 hover:text-rose-600 rounded" title="Delete"><Trash2 className="w-4 h-4" /></button>
+        </div>
+      </div>
+      <div className="mt-3 space-y-1.5">
+        {a.team && <div className="text-xs text-slate-500"><span className="text-slate-400">Team/Org: </span>{a.team}</div>}
+        {(a.repo_url || a.project_url) && (
+          <a href={a.repo_url || a.project_url} target="_blank" rel="noreferrer" className="block text-xs text-indigo-600 hover:underline truncate">{a.repo_url || a.project_url}</a>
+        )}
+        <SecretRow label="Password" value={a.password} id={`p-${a.id}`} />
+        <SecretRow label="API Key / Token" value={a.api_key} id={`k-${a.id}`} />
+        {a.notes && <p className="text-xs text-slate-400 pt-1 border-t border-slate-100 mt-1">{a.notes}</p>}
+      </div>
+    </div>
+  );
+}
+
+// Field layout per category: which fields to show and their labels
+const FIELD_SPEC = {
+  base44: [
+    { f: "account_name", label: "Account Name", placeholder: "e.g. MeWork — Main Workspace" },
+    { f: "account_email", label: "Email", type: "email", placeholder: "you@example.com" },
+    { f: "password", label: "Password", secret: true },
+    { f: "team", label: "Workspace ID", placeholder: "Workspace id" },
+    { f: "project_url", label: "App URL", placeholder: "https://app.base44.com/..." },
+  ],
+  supabase: [
+    { f: "account_name", label: "Project Name", placeholder: "e.g. MeWork DB" },
+    { f: "account_email", label: "Email", type: "email", placeholder: "you@example.com" },
+    { f: "password", label: "Password", secret: true },
+    { f: "team", label: "Organization", placeholder: "Org name" },
+    { f: "project_url", label: "Project URL", placeholder: "https://xxx.supabase.co" },
+    { f: "api_key", label: "Anon / Service Key", secret: true },
+  ],
+  github: [
+    { f: "account_name", label: "Repo Name", placeholder: "owner/repo" },
+    { f: "account_email", label: "Email", type: "email", placeholder: "you@example.com" },
+    { f: "password", label: "Password / Token", secret: true },
+    { f: "repo_url", label: "Repo URL", placeholder: "https://github.com/owner/repo" },
+    { f: "team", label: "Owner", placeholder: "Owner / org" },
+    { f: "api_key", label: "Personal Access Token", secret: true },
+  ],
+  vercel: [
+    { f: "account_name", label: "Project Name", placeholder: "e.g. MeWork Web" },
+    { f: "account_email", label: "Email", type: "email", placeholder: "you@example.com" },
+    { f: "password", label: "Password / Token", secret: true },
+    { f: "team", label: "Team Slug", placeholder: "team slug" },
+    { f: "project_url", label: "Project URL", placeholder: "https://meework.vercel.app" },
+    { f: "api_key", label: "Token", secret: true },
+  ],
+};
+
+function AccountForm({ account, defaultCategory, onClose, onSaved }) {
+  const [form, setForm] = useState(() => {
+    const base = account || { account_name: "", account_email: "", password: "", api_key: "", team: "", project_url: "", repo_url: "", notes: "" };
+    return { ...base, category: account?.category || defaultCategory || "base44" };
+  });
+  const [showSecret, setShowSecret] = useState({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const spec = FIELD_SPEC[form.category] || [];
 
-  const generatePassword = () => {
+  const generatePassword = (field) => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#$&";
     let pw = "";
-    for (let i = 0; i < 14; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
-    set("password", pw);
-    setShowPassword(true);
+    for (let i = 0; i < 16; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
+    set(field, pw);
+    setShowSecret((s) => ({ ...s, [field]: true }));
   };
 
   const submit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!form.account_name.trim() || !form.account_email.trim() || !form.password) {
-      setError("Name, email and password are required.");
-      return;
-    }
+    if (!form.account_name.trim()) { setError("Name is required."); return; }
     setSaving(true);
     try {
       if (account) {
         await base44.entities.Base44Account.update(account.id, form);
-        await base44.entities.AuditLog.create({ action: "updated", entity: "Base44Account", entity_id: account.id, description: `Updated Base44 account ${form.account_name}` });
+        await base44.entities.AuditLog.create({ action: "updated", entity: "Base44Account", entity_id: account.id, description: `Updated ${form.category} account ${form.account_name}` });
       } else {
         const created = await base44.entities.Base44Account.create(form);
-        await base44.entities.AuditLog.create({ action: "created", entity: "Base44Account", entity_id: created.id, description: `Created Base44 account ${form.account_name}` });
+        await base44.entities.AuditLog.create({ action: "created", entity: "Base44Account", entity_id: created.id, description: `Created ${form.category} account ${form.account_name}` });
       }
       onSaved();
     } catch (err) {
@@ -164,45 +234,44 @@ function AccountForm({ account, onClose, onSaved }) {
   };
 
   return (
-    <Modal open onClose={onClose} title={account ? "Edit Base44 Account" : "Add Base44 Account"}>
-      <div className="flex items-start gap-3 pb-4 mb-4 border-b border-slate-100">
-        <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
-          <Server className="w-4.5 h-4.5 text-white" style={{ width: 18, height: 18 }} />
-        </div>
-        <p className="text-xs text-slate-500 leading-relaxed">
-          Save the Base44 workspace login here. Projects link to these accounts, so you always know which account a project runs on.
-        </p>
-      </div>
+    <Modal open onClose={onClose} title={account ? "Edit Account" : "Add Account"} size="lg">
       <form onSubmit={submit} className="space-y-4">
-        <Input label="Account Name" placeholder="e.g. MeWork — Main Workspace" required value={form.account_name} onChange={(e) => set("account_name", e.target.value)} />
-        <Input label="Email" type="email" placeholder="you@example.com" required value={form.account_email} onChange={(e) => set("account_email", e.target.value)} />
-        <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Password</label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              className={`${fieldClass} pr-20`}
-              required
-              value={form.password}
-              onChange={(e) => set("password", e.target.value)}
-              placeholder="••••••••"
-            />
-            <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-              <button type="button" onClick={generatePassword} title="Generate a strong password" className="p-1.5 text-slate-400 hover:text-indigo-600 rounded">
-                <RefreshCw className="w-4 h-4" />
-              </button>
-              <button type="button" onClick={() => setShowPassword((s) => !s)} title={showPassword ? "Hide password" : "Show password"} className="p-1.5 text-slate-400 hover:text-slate-600 rounded">
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+        <Select label="Category" value={form.category} onChange={(e) => set("category", e.target.value)}>
+          {CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+        </Select>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {spec.map((fld) => (
+            <div key={fld.f} className={fld.secret ? "sm:col-span-1" : ""}>
+              <label className="block text-xs font-medium text-slate-600 mb-1">{fld.label}</label>
+              {fld.secret ? (
+                <div className="relative">
+                  <input
+                    type={showSecret[fld.f] ? "text" : "password"}
+                    className={`${fieldClass} pr-20`}
+                    value={form[fld.f] || ""}
+                    onChange={(e) => set(fld.f, e.target.value)}
+                    placeholder="••••••••"
+                  />
+                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                    <button type="button" onClick={() => generatePassword(fld.f)} title="Generate" className="p-1.5 text-slate-400 hover:text-indigo-600 rounded">
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                    <button type="button" onClick={() => setShowSecret((s) => ({ ...s, [fld.f]: !s[fld.f] }))} title={showSecret[fld.f] ? "Hide" : "Show"} className="p-1.5 text-slate-400 hover:text-slate-600 rounded">
+                      {showSecret[fld.f] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <Input type={fld.type || "text"} placeholder={fld.placeholder} value={form[fld.f] || ""} onChange={(e) => set(fld.f, e.target.value)} />
+              )}
             </div>
-          </div>
+          ))}
         </div>
+        <Textarea label="Notes" value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} />
         {error && <div className="p-2.5 rounded-lg bg-rose-100 text-rose-700 text-xs">{error}</div>}
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-          <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg disabled:opacity-50">
-            {saving ? "Saving…" : account ? "Save Changes" : "Create Account"}
-          </button>
+          <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg disabled:opacity-50">{saving ? "Saving…" : account ? "Save Changes" : "Create Account"}</button>
         </div>
       </form>
     </Modal>

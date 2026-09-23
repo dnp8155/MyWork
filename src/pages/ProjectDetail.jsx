@@ -15,7 +15,7 @@ import DocumentsSection from "@/components/projects/DocumentsSection";
 import {
   ArrowLeft, Wallet, TrendingUp, TrendingDown, Clock, Percent, Users,
   Plus, Globe, HardDrive, Server, FileText, Receipt, History,
-  KeyRound, Eye, EyeOff, Pencil, Trash2,
+  KeyRound, Eye, EyeOff, Pencil, Trash2, Database, Github,
 } from "lucide-react";
 
 const TABS = [
@@ -27,7 +27,7 @@ const TABS = [
   { key: "invoices", label: "Invoices" },
   { key: "domain", label: "Domain" },
   { key: "hosting", label: "Hosting" },
-  { key: "base44", label: "Base44" },
+  { key: "connections", label: "Connections" },
   { key: "credentials", label: "Credentials" },
   { key: "activity", label: "Activity" },
 ];
@@ -313,17 +313,50 @@ export default function ProjectDetail() {
         </Section>
       )}
 
-      {tab === "base44" && (
-        <Section title="Base44 Account">
-          {!base44Account ? <p className="text-sm text-slate-400">No Base44 account linked.</p> : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <Info label="Account Name" value={base44Account.account_name} />
-              <Info label="Email" value={base44Account.account_email} />
-              <Info label="Password" value={base44Account.password} />
+      {tab === "connections" && (() => {
+        const services = [
+          { key: "base44", field: "base44_account_id", label: "Base44", icon: Server },
+          { key: "supabase", field: "supabase_account_id", label: "Supabase", icon: Database },
+          { key: "github", field: "github_account_id", label: "GitHub", icon: Github },
+          { key: "vercel", field: "vercel_account_id", label: "Vercel", icon: Globe },
+        ];
+        const link = async (field, value, label) => {
+          await base44.entities.Project.update(project.id, { [field]: value || null });
+          refresh();
+          toast({ title: `${label} ${value ? "linked" : "unlinked"}` });
+        };
+        return (
+          <Section title="Connected Services">
+            <p className="text-xs text-slate-500 mb-3">Link this project to its Base44, GitHub, Supabase and Vercel accounts — always know where it's built, hosted and connected.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {services.map((s) => {
+                const opts = (base44Accounts || []).filter((a) => (a.category || "base44") === s.key);
+                const cur = project[s.field];
+                const acc = opts.find((o) => o.id === cur);
+                return (
+                  <div key={s.key} className="border border-slate-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <s.icon className="w-4 h-4 text-slate-500" />
+                      <span className="text-sm font-medium text-slate-700">{s.label}</span>
+                      {cur && <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600">Linked</span>}
+                    </div>
+                    <select
+                      value={cur || ""}
+                      onChange={(e) => link(s.field, e.target.value, s.label)}
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-indigo-400 focus:outline-none"
+                    >
+                      <option value="">— None —</option>
+                      {opts.map((o) => <option key={o.id} value={o.id}>{o.account_name}{o.account_email ? ` · ${o.account_email}` : ""}</option>)}
+                    </select>
+                    {acc && <div className="text-xs text-slate-400 mt-2 break-all">{acc.repo_url || acc.project_url || acc.team || acc.account_email || ""}</div>}
+                    {opts.length === 0 && <p className="text-xs text-amber-600 mt-2">No {s.label} account yet — add one in Accounts.</p>}
+                  </div>
+                );
+              })}
             </div>
-          )}
-        </Section>
-      )}
+          </Section>
+        );
+      })()}
 
       {tab === "credentials" && (
         <Section

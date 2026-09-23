@@ -5,12 +5,42 @@
     "account_name": {
       "type": "string"
     },
+    "category": {
+      "type": "string",
+      "enum": [
+        "base44",
+        "supabase",
+        "github",
+        "vercel"
+      ],
+      "default": "base44",
+      "description": "Platform this account belongs to"
+    },
     "account_email": {
       "type": "string"
     },
     "password": {
       "type": "string",
-      "description": "Account password"
+      "description": "Account password or access token"
+    },
+    "project_url": {
+      "type": "string",
+      "description": "Supabase project URL / Vercel project URL / Base44 app URL"
+    },
+    "repo_url": {
+      "type": "string",
+      "description": "GitHub repository URL"
+    },
+    "api_key": {
+      "type": "string",
+      "description": "API key / token (masked)"
+    },
+    "team": {
+      "type": "string",
+      "description": "Org / owner / team slug"
+    },
+    "notes": {
+      "type": "string"
     }
   },
   "required": [
