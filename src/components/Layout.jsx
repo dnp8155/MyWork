@@ -40,7 +40,7 @@ export default function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="h-screen bg-slate-50 flex overflow-hidden">
       {/* Sidebar */}
       <aside
         className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transition-all duration-200 ${
@@ -96,8 +96,8 @@ export default function Layout() {
       )}
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-20">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 flex-shrink-0 z-20">
           <div className="flex items-center gap-3">
             <button className="lg:hidden text-slate-600" onClick={() => setSidebarOpen(true)}>
               <Menu className="w-6 h-6" />
@@ -113,7 +113,7 @@ export default function Layout() {
           </div>
           <NotificationBell />
         </header>
-        <main className="flex-1 p-4 lg:p-6 overflow-x-hidden">
+        <main className="flex-1 p-4 lg:p-6 overflow-y-auto overflow-x-hidden">
           <Outlet />
         </main>
       </div>
