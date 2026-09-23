@@ -10,6 +10,7 @@ import Modal from "@/components/Modal";
 import { Input, Select, Textarea } from "@/components/FormFields";
 import { Plus, FileText, CheckCircle2, XCircle, FileCheck } from "lucide-react";
 import Watermark from "@/components/Watermark";
+import QuotationPreview from "@/components/quotation/QuotationPreview";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Quotations() {
@@ -126,7 +127,7 @@ export default function Quotations() {
         </div>
       )}
       {modalOpen && <QuoteForm clients={clients || []} projects={projects || []} existing={quotations || []} onClose={() => setModalOpen(false)} onSaved={() => { setModalOpen(false); refresh(); toast({ title: "Quotation created" }); }} />}
-      {viewQuote && <QuoteView quote={viewQuote} settings={settings} onClose={() => setViewQuote(null)} onApprove={() => approve(viewQuote)} />}
+      {viewQuote && <QuotationPreview quote={viewQuote} settings={settings} onClose={() => setViewQuote(null)} onApprove={() => approve(viewQuote)} />}
     </div>
   );
 }
