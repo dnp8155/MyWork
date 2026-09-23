@@ -11,6 +11,7 @@ import { Input, Select, Textarea } from "@/components/FormFields";
 import { useToast } from "@/components/ui/use-toast";
 import CredentialForm, { CATEGORY_STYLES } from "@/components/credentials/CredentialForm";
 import TeamSection from "@/components/projects/TeamSection";
+import ProjectForm from "@/components/projects/ProjectForm";
 import DocumentsSection from "@/components/projects/DocumentsSection";
 import {
   ArrowLeft, Wallet, TrendingUp, TrendingDown, Clock, Percent, Users,
@@ -39,6 +40,7 @@ export default function ProjectDetail() {
   const [payModal, setPayModal] = useState(false);
   const [expenseModal, setExpenseModal] = useState(false);
   const [credModal, setCredModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
   const [editingCred, setEditingCred] = useState(null);
   const [credRevealed, setCredRevealed] = useState({});
   const { toast } = useToast();
@@ -75,8 +77,11 @@ export default function ProjectDetail() {
         title={project.name}
         subtitle={`${project.project_number} • ${project.client_name || "No client"} • ${project.project_type === "recurring" ? "Recurring" : "Fixed"}`}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <StatusBadge status={project.status} />
+            <button onClick={() => setEditModal(true)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+              <Pencil className="w-4 h-4" /> Edit
+            </button>
             <Link to={`/projects/${id}/shared`} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
               <Users className="w-4 h-4" /> Shared View
             </Link>
@@ -417,6 +422,18 @@ export default function ProjectDetail() {
         </Section>
       )}
 
+      {editModal && (
+        <ProjectForm
+          clients={clients || []}
+          base44Accounts={base44Accounts || []}
+          existing={projects || []}
+          expenses={expenses || []}
+          payments={payments || []}
+          project={project}
+          onClose={() => setEditModal(false)}
+          onSaved={() => { setEditModal(false); refresh(); toast({ title: "Project updated" }); }}
+        />
+      )}
       {payModal && <PaymentModal project={project} onClose={() => setPayModal(false)} onSaved={() => { setPayModal(false); refresh(); toast({ title: "Payment recorded" }); }} />}
       {credModal && (
         <CredentialForm
