@@ -23,7 +23,8 @@ function Section({ title, icon: Icon, children }) {
 const defaultForm = () => ({
   logo: "", name: "", client_id: "", contact_name: "", contact_number: "",
   client_email: "", client_address: "", company_name: "",
-  base44_account_id: "", base44_project_url: "", status: "pending",
+  base44_account_id: "", base44_project_url: "", github_account_id: "",
+  supabase_account_id: "", vercel_account_id: "", status: "pending",
   project_type: "fixed", total_amount: 0, monthly_amount: 0,
   number_of_months: 1, payment_due_day: 1, recurring_start_date: "",
   start_date: "", expected_completion_date: "", description: "",
@@ -43,6 +44,9 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
     company_name: project.company_name || "",
     base44_account_id: project.base44_account_id || "",
     base44_project_url: project.base44_project_url || "",
+    github_account_id: project.github_account_id || "",
+    supabase_account_id: project.supabase_account_id || "",
+    vercel_account_id: project.vercel_account_id || "",
     status: project.status || "pending",
     project_type: project.project_type || "fixed",
     total_amount: Number(project.total_amount) || 0,
@@ -65,6 +69,7 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
   const setH = (k, v) => setHosting((h) => ({ ...h, [k]: v }));
 
   const fixedTotal = Number(form.total_amount) || 0;
+  const accBy = (cat) => base44Accounts.filter((a) => (a.category || "base44") === cat);
 
   const uploadLogo = async (e) => {
     const file = e.target.files?.[0];
@@ -112,6 +117,9 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
         expected_completion_date: form.expected_completion_date,
         base44_account_id: form.base44_account_id,
         base44_project_url: form.base44_project_url,
+        github_account_id: form.github_account_id,
+        supabase_account_id: form.supabase_account_id,
+        vercel_account_id: form.vercel_account_id,
         project_type: form.project_type,
         total_amount: total,
         monthly_amount: Number(form.monthly_amount) || 0,
@@ -286,9 +294,21 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
             </div>
             <Select label="Base44 Account" value={form.base44_account_id} onChange={(e) => set("base44_account_id", e.target.value)}>
               <option value="">None</option>
-              {base44Accounts.map((a) => <option key={a.id} value={a.id}>{a.account_name}</option>)}
+              {accBy("base44").map((a) => <option key={a.id} value={a.id}>{a.account_name}</option>)}
             </Select>
             <Input label="Base44 Project URL" value={form.base44_project_url} onChange={(e) => set("base44_project_url", e.target.value)} />
+            <Select label="GitHub Account" value={form.github_account_id} onChange={(e) => set("github_account_id", e.target.value)}>
+              <option value="">None</option>
+              {accBy("github").map((a) => <option key={a.id} value={a.id}>{a.account_name}</option>)}
+            </Select>
+            <Select label="Supabase Account" value={form.supabase_account_id} onChange={(e) => set("supabase_account_id", e.target.value)}>
+              <option value="">None</option>
+              {accBy("supabase").map((a) => <option key={a.id} value={a.id}>{a.account_name}</option>)}
+            </Select>
+            <Select label="Vercel Account" value={form.vercel_account_id} onChange={(e) => set("vercel_account_id", e.target.value)}>
+              <option value="">None</option>
+              {accBy("vercel").map((a) => <option key={a.id} value={a.id}>{a.account_name}</option>)}
+            </Select>
           </div>
         </Section>
 

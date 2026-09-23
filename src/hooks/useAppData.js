@@ -8,6 +8,8 @@ const CACHE_TTL = 60000; // 60 seconds
 const cache = { data: null, lastFetched: 0, inflight: null };
 
 const isFresh = () => cache.data && Date.now() - cache.lastFetched < CACHE_TTL;
+const listeners = new Set();
+const notify = () => listeners.forEach((fn) => fn());
 
 async function fetchAll() {
   try {
@@ -62,24 +64,27 @@ export function useAppData() {
   const [loading, setLoading] = useState(!cache.data);
 
   useEffect(() => {
+    const listener = () => { setData(cache.data || {}); setLoading(false); };
+    listeners.add(listener);
     let mounted = true;
     if (isFresh()) {
       setData(cache.data);
       setLoading(false);
-      return () => { mounted = false; };
+    } else {
+      setLoading(true);
+      loadAll(false).then((d) => {
+        if (mounted && d) { setData(d); setLoading(false); notify(); }
+      });
     }
-    setLoading(true);
-    loadAll(false).then((d) => {
-      if (mounted && d) { setData(d); setLoading(false); }
-    });
-    return () => { mounted = false; };
+    return () => { mounted = false; listeners.delete(listener); };
   }, []);
 
-  // refresh always forces a fresh fetch (used after mutations)
+  // refresh always forces a fresh fetch (used after mutations).
+  // Notifies every subscriber so all open views update immediately.
   const refresh = useCallback(async () => {
     setLoading(true);
     const d = await loadAll(true);
-    if (d) { setData(d); setLoading(false); }
+    if (d) { setData(d); setLoading(false); notify(); }
   }, []);
 
   return { ...data, loading, refresh };
