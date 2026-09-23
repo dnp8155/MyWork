@@ -20,6 +20,18 @@
     "client_name": {
       "type": "string"
     },
+    "client_company": {
+      "type": "string"
+    },
+    "client_email": {
+      "type": "string"
+    },
+    "client_phone": {
+      "type": "string"
+    },
+    "client_address": {
+      "type": "string"
+    },
     "project_id": {
       "type": "string"
     },
@@ -90,8 +102,7 @@
   },
   "required": [
     "quotation_number",
-    "date",
-    "client_id"
+    "date"
   ],
   "rls": {
     "read": {
