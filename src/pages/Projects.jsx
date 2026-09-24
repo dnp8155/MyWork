@@ -101,7 +101,7 @@ export default function Projects() {
 
       {/* Filter bar */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 mb-5">
-        <div className="inline-flex bg-slate-100 rounded-lg p-1 self-start overflow-x-auto">
+        <div className="inline-flex bg-slate-100 rounded-lg p-1 self-start overflow-x-auto max-w-full">
           {TABS.map((t) => (
             <button
               key={t.key}
@@ -114,19 +114,19 @@ export default function Projects() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search projects…"
-            className="px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-indigo-400 focus:outline-none w-44"
+            className="px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-indigo-400 focus:outline-none w-full sm:w-44"
           />
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-indigo-400 focus:outline-none">
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-indigo-400 focus:outline-none flex-1 sm:flex-none">
             <option value="all">All Types</option>
             <option value="fixed">Fixed</option>
             <option value="recurring">Recurring</option>
           </select>
-          <select value={clientFilter} onChange={(e) => setClientFilter(e.target.value)} className="px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-indigo-400 focus:outline-none max-w-40">
+          <select value={clientFilter} onChange={(e) => setClientFilter(e.target.value)} className="px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-indigo-400 focus:outline-none flex-1 sm:flex-none sm:max-w-40">
             <option value="all">All Clients</option>
             {(clients || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
