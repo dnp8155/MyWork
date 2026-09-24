@@ -103,7 +103,7 @@ export default function Base44Accounts() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {list.map((a) => (
-                <AccountCard key={a.id} account={a} meta={activeMeta} onEdit={() => { setEditing(a); setModalOpen(true); }} onDelete={() => handleDelete(a)} />
+                <AccountCard key={a.id} account={a} meta={activeMeta} projects={projects || []} onEdit={() => { setEditing(a); setModalOpen(true); }} onDelete={() => handleDelete(a)} />
               ))}
             </div>
           )}
@@ -193,8 +193,16 @@ function SecretRow({ label, value, id }) {
   );
 }
 
-function AccountCard({ account, meta, onEdit, onDelete }) {
+const CATEGORY_FIELD = {
+  base44: "base44_account_id",
+  supabase: "supabase_account_id",
+  github: "github_account_id",
+  vercel: "vercel_account_id",
+};
+
+function AccountCard({ account, meta, projects, onEdit, onDelete }) {
   const a = account;
+  const linked = (projects || []).filter((p) => p[CATEGORY_FIELD[meta.key]] === a.id);
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-4">
       <div className="flex items-start gap-3">
@@ -218,6 +226,23 @@ function AccountCard({ account, meta, onEdit, onDelete }) {
         <SecretRow label="Password" value={a.password} id={`p-${a.id}`} />
         <SecretRow label="API Key / Token" value={a.api_key} id={`k-${a.id}`} />
         {a.notes && <p className="text-xs text-slate-400 pt-1 border-t border-slate-100 mt-1">{a.notes}</p>}
+
+        <div className="pt-2 mt-2 border-t border-slate-100">
+          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Linked Projects ({linked.length})</div>
+          {linked.length === 0 ? (
+            <div className="text-xs text-slate-300">No projects linked.</div>
+          ) : (
+            <div className="space-y-1">
+              {linked.map((p) => (
+                <Link key={p.id} to={`/projects/${p.id}`} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-slate-50 hover:bg-indigo-50 transition-colors group">
+                  <span className={`w-1.5 h-1.5 rounded-full ${p.status === "active" ? "bg-emerald-500" : "bg-slate-300"}`} />
+                  <span className="text-xs font-medium text-slate-700 group-hover:text-indigo-700 truncate flex-1">{p.name}</span>
+                  <span className="text-[10px] text-slate-400">{p.project_number}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
