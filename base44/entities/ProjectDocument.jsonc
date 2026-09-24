@@ -20,6 +20,20 @@
       "type": "string",
       "description": "Public URL of the uploaded file"
     },
+    "file_type": {
+      "type": "string",
+      "enum": [
+        "document",
+        "zip",
+        "prd"
+      ],
+      "default": "document",
+      "description": "document = general file, zip = static data / zip archive, prd = product requirements document"
+    },
+    "public_link": {
+      "type": "string",
+      "description": "Custom public shareable download link"
+    },
     "notes": {
       "type": "string"
     },
