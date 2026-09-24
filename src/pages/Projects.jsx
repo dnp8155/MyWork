@@ -10,7 +10,7 @@ import ProjectCard from "@/components/projects/ProjectCard";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Download, LayoutGrid, List as ListIcon, FolderKanban, Pencil } from "lucide-react";
+import { Plus, Download, LayoutGrid, List as ListIcon, FolderKanban, Pencil, Server, Layers } from "lucide-react";
 
 const TABS = [
   { key: "all", label: "All Projects" },
@@ -145,6 +145,13 @@ export default function Projects() {
             >
               <ListIcon className="w-4 h-4" />
             </button>
+            <button
+              onClick={() => setView("grouped")}
+              className={`w-8 h-7 rounded-md flex items-center justify-center transition ${view === "grouped" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+              title="Group by account"
+            >
+              <Layers className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -158,6 +165,15 @@ export default function Projects() {
           title="No projects found"
           message="Create your first project to start tracking finances."
           action={<button onClick={() => setModalOpen(true)} className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg">New Project</button>}
+        />
+      ) : view === "grouped" ? (
+        <GroupedByAccount
+          projects={filtered}
+          accounts={base44Accounts || []}
+          payments={payments}
+          expenses={expenses}
+          onArchive={archiveProject}
+          onEdit={setEditing}
         />
       ) : view === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
@@ -211,6 +227,60 @@ export default function Projects() {
             toast({ title: wasEditing ? "Project updated" : "Project created" });
           }}
         />
+      )}
+    </div>
+  );
+}
+
+function GroupedByAccount({ projects, accounts, payments, expenses, onArchive, onEdit }) {
+  const byAccount = accounts
+    .filter((a) => (a.category || "base44") === "base44")
+    .map((acc) => ({
+      acc,
+      items: projects.filter((p) => p.base44_account_id === acc.id),
+    }))
+    .filter((g) => g.items.length > 0)
+    .sort((a, b) => b.items.length - a.items.length);
+
+  const unassigned = projects.filter((p) => !p.base44_account_id || !accounts.some((a) => a.id === p.base44_account_id));
+
+  if (byAccount.length === 0 && unassigned.length === 0) {
+    return <div className="text-center text-sm text-slate-400 py-12">No projects to group.</div>;
+  }
+
+  const Group = ({ title, sub, count, children }) => (
+    <div className="mb-7">
+      <div className="flex items-center gap-2.5 mb-3">
+        <span className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+          <Server className="w-4 h-4" />
+        </span>
+        <div className="min-w-0">
+          <div className="font-semibold text-slate-800 truncate">{title}</div>
+          {sub && <div className="text-[11px] text-slate-400 truncate">{sub}</div>}
+        </div>
+        <span className="ml-auto text-[11px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{count} {count === 1 ? "project" : "projects"}</span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 pl-1">
+        {children}
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      {byAccount.map(({ acc, items }) => (
+        <Group key={acc.id} title={acc.account_name} sub={acc.account_email || acc.team || "Base44 account"} count={items.length}>
+          {items.map((p) => (
+            <ProjectCard key={p.id} project={p} payments={payments} expenses={expenses} onArchive={onArchive} onEdit={onEdit} />
+          ))}
+        </Group>
+      ))}
+      {unassigned.length > 0 && (
+        <Group title="Unassigned" sub="No Base44 account linked" count={unassigned.length}>
+          {unassigned.map((p) => (
+            <ProjectCard key={p.id} project={p} payments={payments} expenses={expenses} onArchive={onArchive} onEdit={onEdit} />
+          ))}
+        </Group>
       )}
     </div>
   );
