@@ -8,6 +8,11 @@
     "message": {
       "type": "string"
     },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional longer description"
+    },
     "type": {
       "type": "string",
       "enum": [

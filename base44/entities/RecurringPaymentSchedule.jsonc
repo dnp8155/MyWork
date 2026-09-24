@@ -44,6 +44,11 @@
     "installment_number": {
       "type": "number",
       "default": 1
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description for this installment"
     }
   },
   "required": [

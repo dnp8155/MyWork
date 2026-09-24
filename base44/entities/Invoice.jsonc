@@ -72,6 +72,11 @@
       "type": "number",
       "default": 0
     },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional invoice description or notes"
+    },
     "status": {
       "type": "string",
       "enum": [
