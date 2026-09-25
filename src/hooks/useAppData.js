@@ -13,12 +13,7 @@ const notify = () => listeners.forEach((fn) => fn());
 
 async function fetchAll() {
   try {
-    const [
-      clients, base44Accounts, projects, payments, recurringSchedules,
-      quotations, invoices, domains, hosting, expenses, transactions,
-      notifications, auditLogs, settings, credentials,
-      projectMembers, projectDocuments,
-    ] = await Promise.all([
+    const responses = await Promise.all([
       supabase.from('clients').select('*'),
       supabase.from('base44_accounts').select('*'),
       supabase.from('projects').select('*'),
@@ -37,6 +32,16 @@ async function fetchAll() {
       supabase.from('project_members').select('*'),
       supabase.from('project_documents').select('*'),
     ]);
+
+    const extract = (res) => (res.error ? [] : (res.data || []));
+
+    const [
+      clients, base44Accounts, projects, payments, recurringSchedules,
+      quotations, invoices, domains, hosting, expenses, transactions,
+      notifications, auditLogs, settings, credentials,
+      projectMembers, projectDocuments,
+    ] = responses.map(extract);
+
     cache.data = {
       clients, base44Accounts, projects, payments, recurringSchedules,
       quotations, invoices, domains, hosting, expenses, transactions,

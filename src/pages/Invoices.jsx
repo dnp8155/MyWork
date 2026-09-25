@@ -27,7 +27,7 @@ export default function Invoices() {
 
   const recordPayment = async (inv, amount, method, reference) => {
     const year = new Date().getFullYear();
-    const existing = await supabase.from('payments').select('*');
+    const { data: existing } = await supabase.from('payments').select('*');
     const payment_number = `PAY-${year}-${String(existing.length + 1).padStart(4, "0")}`;
     const payment = await supabase.from('payments').insert({
       payment_number, date: new Date().toISOString().slice(0, 10), amount: Number(amount), payment_method: method, reference,

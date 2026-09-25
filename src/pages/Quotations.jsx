@@ -38,7 +38,7 @@ export default function Quotations() {
         else client = await supabase.from('clients').insert({ name: q.client_name, company_name: q.client_company, email: q.client_email, phone: q.client_phone, address: q.client_address });
         clientId = client.id; clientName = client.name;
         const y = new Date().getFullYear();
-        const allProjects = await supabase.from('projects').select('*');
+        const { data: allProjects } = await supabase.from('projects').select('*');
         const project_number = `PRJ-${y}-${String(allProjects.length + 1).padStart(4, "0")}`;
         const project = await supabase.from('projects').insert({
           project_number, name: projectName || `${clientName} Project`,
@@ -49,7 +49,7 @@ export default function Quotations() {
         projectId = project.id; projectName = project.name;
       }
       const year = new Date().getFullYear();
-      const existingInv = await supabase.from('invoices').select('*');
+      const { data: existingInv } = await supabase.from('invoices').select('*');
       const invoice_number = nextNumber("INV", year, existingInv);
       const due = new Date(); due.setDate(due.getDate() + 15);
       const invoice = await supabase.from('invoices').insert({

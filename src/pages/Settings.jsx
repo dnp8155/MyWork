@@ -13,7 +13,7 @@ export default function Settings() {
   const { toast } = useToast();
 
   useEffect(() => {
-    supabase.from('company_settings').select('*').then((s) => setSettings(s[0] || null));
+    supabase.from('company_settings').select('*').then(({ data: s }) => setSettings(s?.[0] || null));
   }, []);
 
   const set = (k, v) => setSettings((s) => ({ ...s, [k]: v }));

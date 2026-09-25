@@ -90,7 +90,7 @@ function PaymentForm({ clients, projects, invoices, existing, onClose, onSaved }
       // update invoice status if linked
       if (form.invoice_id) {
         const inv = invoice;
-        const allPayments = await supabase.from('payments').select('*');
+        const { data: allPayments } = await supabase.from('payments').select('*');
         const paid = allPayments.filter((p) => p.invoice_id === inv.id).reduce((s, p) => s + Number(p.amount || 0), 0);
         let status = inv.status;
         if (paid >= inv.total) status = "paid"; else if (paid > 0) status = "partially_paid";

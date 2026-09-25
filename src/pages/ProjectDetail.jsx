@@ -520,7 +520,7 @@ function PaymentModal({ project, payment, onClose, onSaved }) {
         return;
       }
       const year = new Date().getFullYear();
-      const existing = await supabase.from('payments').select('*');
+      const { data: existing } = await supabase.from('payments').select('*');
       const payment_number = `PAY-${year}-${String(existing.length + 1).padStart(4, "0")}`;
       const created = await supabase.from('payments').insert({
         ...form, amount: Number(form.amount), payment_number,
@@ -570,7 +570,7 @@ function ExpenseModal({ project, onClose, onSaved }) {
     setSaving(true);
     try {
       const year = new Date().getFullYear();
-      const existing = await supabase.from('expenses').select('*');
+      const { data: existing } = await supabase.from('expenses').select('*');
       const expense_number = `EXP-${year}-${String(existing.length + 1).padStart(4, "0")}`;
       const expense = await supabase.from('expenses').insert({
         ...form, amount: Number(form.amount), expense_number,
