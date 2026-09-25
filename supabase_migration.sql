@@ -461,20 +461,21 @@ END $$;
 -- ============================================================
 -- Realtime (for live updates via Supabase subscriptions)
 -- ============================================================
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS clients;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS projects;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS invoices;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS quotations;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS payments;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS expenses;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS transactions;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS domains;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS hosting_accounts;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS base44_accounts;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS credentials;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS project_members;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS project_documents;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS recurring_payment_schedules;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS audit_logs;
-ALTER PUBLICATION supabase_realtime ADD TABLE IF EXISTS company_settings;
+DO $$
+DECLARE t text;
+BEGIN
+  FOR t IN SELECT unnest(ARRAY[
+    'clients','projects','invoices','quotations','payments','expenses',
+    'transactions','domains','hosting_accounts','base44_accounts',
+    'credentials','project_members','project_documents',
+    'recurring_payment_schedules','notifications','audit_logs','company_settings'
+  ])
+  LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables
+      WHERE pubname = 'supabase_realtime' AND tablename = t
+    ) THEN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', t);
+    END IF;
+  END LOOP;
+END $$;
