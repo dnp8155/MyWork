@@ -78,7 +78,7 @@ export default function Register() {
     try {
       const result = await supabase.auth.verifyOtp({ email: email.trim(), token: otpCode, type: 'signup' });
       if (result?.access_token) {
-        base44.auth.setToken(result.access_token);
+        
         // Save the provided name on the new account (best effort)
         try {
           if (fullName.trim()) await supabase.auth.updateUser({ data: { full_name: fullName.trim() } });

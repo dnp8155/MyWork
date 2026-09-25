@@ -76,7 +76,10 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      const fileName = Math.random().toString(36).substring(2) + '_' + file.name;
+      const { data: uploadData, error } = await supabase.storage.from('public').upload(fileName, file);
+      if (error) throw error;
+      const file_url = supabase.storage.from('public').getPublicUrl(fileName).data.publicUrl;
       set("logo", file_url);
     } catch (err) {
       alert("Logo upload failed: " + err.message);

@@ -22,10 +22,13 @@ export default function DocumentsSection({ project, documents, onChanged }) {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      const fileName = Math.random().toString(36).substring(2) + '_' + file.name;
+      const { data: uploadData, error } = await supabase.storage.from('public').upload(fileName, file);
+      if (error) throw error;
+      const file_url = supabase.storage.from('public').getPublicUrl(fileName).data.publicUrl;
       let uploadedBy = "";
       try {
-        const me = await base44.auth.me();
+        const { data: { user: me } } = await supabase.auth.getUser();
         uploadedBy = me?.full_name || "";
       } catch (err) { /* ignore */ }
       await supabase.from('project_documents').insert({

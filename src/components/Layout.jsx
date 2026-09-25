@@ -32,7 +32,7 @@ export default function Layout() {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user)).catch(() => {});
   }, []);
 
   const handleLogout = async () => {

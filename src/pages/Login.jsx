@@ -22,7 +22,7 @@ export default function Login() {
 
   // Skip the login page for users with an active session
   useEffect(() => {
-    base44.auth.isAuthenticated().then((authed) => {
+    supabase.auth.getSession().then(({ data: { session: authed } }) => {
       if (authed) window.location.replace(destination);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

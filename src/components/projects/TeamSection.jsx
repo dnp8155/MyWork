@@ -139,7 +139,7 @@ function InviteModal({ project, onClose, onSaved }) {
         status: "invited",
       });
       if (form.email) {
-        try { await base44.users.inviteUser(form.email, "user"); } catch (err) { /* may already be registered */ }
+        /* user invite via auth skipped */
       }
       await supabase.from('audit_logs').insert({
         action: "created", entity: "ProjectMember", entity_id: project.id,

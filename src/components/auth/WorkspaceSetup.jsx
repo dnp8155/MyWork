@@ -27,7 +27,10 @@ export default function WorkspaceSetupForm({ defaultName, onComplete, onSkip }) 
     setError("");
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      const fileName = Math.random().toString(36).substring(2) + '_' + file.name;
+      const { data: uploadData, error } = await supabase.storage.from('public').upload(fileName, file);
+      if (error) throw error;
+      const file_url = supabase.storage.from('public').getPublicUrl(fileName).data.publicUrl;
       setLogo(file_url);
     } catch {
       setError("Logo upload failed. You can add it later in Settings.");

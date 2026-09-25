@@ -36,7 +36,7 @@ export default function Base44Accounts() {
 
   const handleDelete = async (a) => {
     if (!window.confirm(`Delete account "${a.account_name}"?`)) return;
-    await supabase.from('base44_accounts').delete(a.id);
+    await supabase.from('base44_accounts').delete().eq('id', a.id);
     await supabase.from('audit_logs').insert({ action: "deleted", entity: "Base44Account", entity_id: a.id, description: `Deleted ${catOf(a)} account ${a.account_name}` });
     refresh();
     toast({ title: "Account deleted" });
@@ -309,7 +309,7 @@ function AccountForm({ account, defaultCategory, onClose, onSaved }) {
     setSaving(true);
     try {
       if (account) {
-        await supabase.from('base44_accounts').update(account.id, form);
+        await supabase.from('base44_accounts').update(form).eq('id', account.id);
         await supabase.from('audit_logs').insert({ action: "updated", entity: "Base44Account", entity_id: account.id, description: `Updated ${form.category} account ${form.account_name}` });
       } else {
         const created = await supabase.from('base44_accounts').insert(form);
