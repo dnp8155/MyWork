@@ -21,18 +21,14 @@ const tableMap = {
   CompanySettings: "company_settings",
 };
 
-let cachedUserId;
-
 async function getUserId() {
-  if (cachedUserId !== undefined) return cachedUserId;
   try {
-    const { base44 } = await import("@/api/base44Client");
-    const user = await base44.auth.me();
-    cachedUserId = user?.id || null;
+    const sb = await getSupabase();
+    const { data: { user } } = await sb.auth.getUser();
+    return user?.id || null;
   } catch {
-    cachedUserId = null;
+    return null;
   }
-  return cachedUserId;
 }
 
 // Translates MongoDB-style filter queries to Supabase PostgREST filters

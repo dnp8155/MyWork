@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { Image } from "@/components/ui/image";
 import NotificationBell from "@/components/NotificationBell";
 import {
@@ -28,15 +28,11 @@ const navItems = [
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [user, setUser] = React.useState(null);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  React.useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
   const handleLogout = async () => {
-    await base44.auth.logout();
+    await logout();
   };
 
   return (
@@ -78,10 +74,10 @@ export default function Layout() {
         <div className="p-3 border-t border-slate-200">
           <div className="flex items-center gap-3 px-2 py-2">
             <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-semibold">
-              {user?.full_name?.charAt(0) || "U"}
+              {(user?.user_metadata?.full_name || user?.email || "U")?.charAt(0)}
             </div>
             <div className={`flex-1 min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
-              <div className="text-xs text-slate-900 truncate">{user?.full_name || "User"}</div>
+              <div className="text-xs text-slate-900 truncate">{user?.user_metadata?.full_name || user?.email || "User"}</div>
               <div className="text-[10px] text-slate-500 capitalize">{user?.role || "admin"}</div>
             </div>
             <button onClick={handleLogout} className={`text-slate-400 hover:text-slate-900 ${collapsed ? "lg:hidden" : ""}`}>
