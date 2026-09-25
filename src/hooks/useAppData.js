@@ -73,7 +73,9 @@ export function useAppData() {
     } else {
       setLoading(true);
       loadAll(false).then((d) => {
-        if (mounted && d) { setData(d); setLoading(false); notify(); }
+        if (mounted) { setData(d || {}); setLoading(false); if (d) notify(); }
+      }).catch(() => {
+        if (mounted) setLoading(false);
       });
     }
     return () => { mounted = false; listeners.delete(listener); };

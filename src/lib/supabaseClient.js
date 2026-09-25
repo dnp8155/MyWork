@@ -20,7 +20,10 @@ export async function getSupabase() {
       realtime: { params: { eventsPerSecond: 10 } },
     });
     return client;
-  })();
+  })().catch((err) => {
+    initPromise = null; // allow retry on next call
+    throw err;
+  });
 
   return initPromise;
 }
