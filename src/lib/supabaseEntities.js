@@ -56,10 +56,12 @@ function applyFilter(q, query) {
 }
 
 function applySort(q, sort) {
-  if (!sort) return q.order("created_date", { ascending: false });
+  if (!sort) return q.order("created_at", { ascending: false });
   const desc = sort.startsWith("-");
   const col = desc ? sort.slice(1) : sort;
-  return q.order(col, { ascending: !desc });
+  // Map Base44's created_date to Supabase's created_at
+  const actualCol = col === "created_date" ? "created_at" : col;
+  return q.order(actualCol, { ascending: !desc });
 }
 
 function makeEntity(entityName) {
