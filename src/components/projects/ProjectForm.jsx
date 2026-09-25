@@ -142,14 +142,15 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
       }
 
       // ---- Create mode ----
-      const created = await supabase.from('projects').insert({
+      const { data: created, error: createdError } = await supabase.from('projects').insert({
         ...payload,
         project_number: nextNumber("PRJ", year, existing),
-      });
+      }).select().single();
+      if (createdError) throw createdError;
 
       // Fixed: record advance payment (auto-subtracted from pending amount)
       if (!salaried && Number(advance) > 0) {
-        const payment = await supabase.from('payments').insert({
+        const { data: payment, error: paymentError } = await supabase.from('payments').insert({
           payment_number: nextNumber("PAY", year, payments),
           date: today(),
           amount: Number(advance),
@@ -161,7 +162,8 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
           reference: "Advance",
           notes: "Advance paid at project creation",
           type: "project",
-        });
+        }).select().single();
+        if (paymentError) throw paymentError;
         await supabase.from('transactions').insert({
           transaction_number: `TXN-${Date.now()}`, date: today(), type: "income", category: "project_payment",
           amount: Number(advance), project_id: created.id, project_name: created.name,
