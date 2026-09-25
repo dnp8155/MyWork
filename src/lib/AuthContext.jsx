@@ -20,16 +20,19 @@ export const AuthProvider = ({ children }) => {
       try {
         const supabase = await getSupabase();
 
-        // Check current session
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (currentUser) {
-          setUser(currentUser);
-          setIsAuthenticated(true);
-        }
-
-        // Listen for auth state changes
+        // onAuthStateChange fires INITIAL_SESSION when the client finishes
+        // recovering the session from localStorage — we wait for that
+        // before marking auth as loaded, so we don't prematurely redirect.
         const { data } = supabase.auth.onAuthStateChange((event, session) => {
-          if (session?.user) {
+          if (event === 'INITIAL_SESSION') {
+            if (session?.user) {
+              setUser(session.user);
+              setIsAuthenticated(true);
+            }
+            setAuthChecked(true);
+            setIsLoadingAuth(false);
+            setIsLoadingPublicSettings(false);
+          } else if (session?.user) {
             setUser(session.user);
             setIsAuthenticated(true);
           } else if (event === 'SIGNED_OUT') {
@@ -38,10 +41,6 @@ export const AuthProvider = ({ children }) => {
           }
         });
         unsubscribe = data.subscription.unsubscribe;
-
-        setAuthChecked(true);
-        setIsLoadingAuth(false);
-        setIsLoadingPublicSettings(false);
       } catch (error) {
         console.error('Auth init failed:', error);
         setAuthError({ type: 'unknown', message: error.message });
@@ -61,9 +60,9 @@ export const AuthProvider = ({ children }) => {
   const checkUserAuth = async () => {
     try {
       const supabase = await getSupabase();
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser) {
-        setUser(currentUser);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);

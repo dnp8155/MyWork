@@ -14,7 +14,7 @@ export async function getSupabase() {
   initPromise = (async () => {
     const { base44 } = await import("@/api/base44Client");
     const res = await base44.functions.invoke("supabaseConfig", {});
-    const { url, anonKey } = res.data || {};
+    const { url, anonKey } = res?.data || res || {};
     if (!url || !anonKey) throw new Error("Supabase config not available");
     client = createClient(url, anonKey, {
       realtime: { params: { eventsPerSecond: 10 } },
