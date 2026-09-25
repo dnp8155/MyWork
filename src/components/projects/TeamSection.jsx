@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { formatCurrency } from "@/lib/finance";
 import Modal from "@/components/Modal";
 import StatCard from "@/components/StatCard";
@@ -25,8 +25,8 @@ export default function TeamSection({ project, members, onChanged }) {
 
   const removeMember = async (m) => {
     if (!window.confirm(`Remove "${m.name}" from this project?`)) return;
-    await base44.entities.ProjectMember.update(m.id, { status: "removed" });
-    await base44.entities.AuditLog.create({
+    await supabase.from('project_members').update({ status: "removed" }).eq('id', m.id);
+    await supabase.from('audit_logs').insert({
       action: "updated", entity: "ProjectMember", entity_id: m.id,
       description: `Removed member ${m.name} from ${project.name}`,
     });
@@ -35,7 +35,7 @@ export default function TeamSection({ project, members, onChanged }) {
   };
 
   const activateMember = async (m) => {
-    await base44.entities.ProjectMember.update(m.id, { status: "active" });
+    await supabase.from('project_members').update({ status: "active" }).eq('id', m.id);
     onChanged?.();
     toast({ title: `${m.name} is now active` });
   };
@@ -130,7 +130,7 @@ function InviteModal({ project, onClose, onSaved }) {
     e.preventDefault();
     setSaving(true);
     try {
-      await base44.entities.ProjectMember.create({
+      await supabase.from('project_members').insert({
         ...form,
         salary_amount: Number(form.salary_amount) || 0,
         project_id: project.id,
@@ -141,7 +141,7 @@ function InviteModal({ project, onClose, onSaved }) {
       if (form.email) {
         try { await base44.users.inviteUser(form.email, "user"); } catch (err) { /* may already be registered */ }
       }
-      await base44.entities.AuditLog.create({
+      await supabase.from('audit_logs').insert({
         action: "created", entity: "ProjectMember", entity_id: project.id,
         description: `Invited ${form.name} (${form.role}) to ${project.name}`,
       });

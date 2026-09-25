@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from "@/api/supabaseClient";
 import { appParams } from '@/lib/app-params';
 
 const AuthContext = createContext();
@@ -23,8 +23,8 @@ export const AuthProvider = ({ children }) => {
       setAuthError(null);
       
       try {
-        const publicSettings = await base44.app.getPublicSettings();
-        setAppPublicSettings(publicSettings);
+        const { data: publicSettings } = await supabase.from('company_settings').select('*').limit(1).single();
+        setAppPublicSettings(publicSettings || {});
         
         // If we got the app public settings successfully, check if user is authenticated
         if (appParams.token) {
@@ -81,8 +81,8 @@ export const AuthProvider = ({ children }) => {
     try {
       // Now check if the user is authenticated
       setIsLoadingAuth(true);
-      const currentUser = await base44.auth.me();
-      setUser(currentUser);
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
       setAuthChecked(true);
@@ -108,16 +108,15 @@ export const AuthProvider = ({ children }) => {
     
     if (shouldRedirect) {
       // Use the SDK's logout method which handles token cleanup and redirect
-      base44.auth.logout(window.location.href);
+      supabase.auth.signOut();
     } else {
       // Just remove the token without redirect
-      base44.auth.logout();
+      supabase.auth.signOut();
     }
   };
 
   const navigateToLogin = () => {
-    // Use the SDK's redirectToLogin method
-    base44.auth.redirectToLogin(window.location.href);
+    window.location.href = '/login';
   };
 
   return (

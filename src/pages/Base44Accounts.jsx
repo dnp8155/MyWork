@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAppData } from "@/hooks/useAppData";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import Modal from "@/components/Modal";
@@ -36,8 +36,8 @@ export default function Base44Accounts() {
 
   const handleDelete = async (a) => {
     if (!window.confirm(`Delete account "${a.account_name}"?`)) return;
-    await base44.entities.Base44Account.delete(a.id);
-    await base44.entities.AuditLog.create({ action: "deleted", entity: "Base44Account", entity_id: a.id, description: `Deleted ${catOf(a)} account ${a.account_name}` });
+    await supabase.from('base44_accounts').delete(a.id);
+    await supabase.from('audit_logs').insert({ action: "deleted", entity: "Base44Account", entity_id: a.id, description: `Deleted ${catOf(a)} account ${a.account_name}` });
     refresh();
     toast({ title: "Account deleted" });
   };
@@ -309,11 +309,11 @@ function AccountForm({ account, defaultCategory, onClose, onSaved }) {
     setSaving(true);
     try {
       if (account) {
-        await base44.entities.Base44Account.update(account.id, form);
-        await base44.entities.AuditLog.create({ action: "updated", entity: "Base44Account", entity_id: account.id, description: `Updated ${form.category} account ${form.account_name}` });
+        await supabase.from('base44_accounts').update(account.id, form);
+        await supabase.from('audit_logs').insert({ action: "updated", entity: "Base44Account", entity_id: account.id, description: `Updated ${form.category} account ${form.account_name}` });
       } else {
-        const created = await base44.entities.Base44Account.create(form);
-        await base44.entities.AuditLog.create({ action: "created", entity: "Base44Account", entity_id: created.id, description: `Created ${form.category} account ${form.account_name}` });
+        const created = await supabase.from('base44_accounts').insert(form);
+        await supabase.from('audit_logs').insert({ action: "created", entity: "Base44Account", entity_id: created.id, description: `Created ${form.category} account ${form.account_name}` });
       }
       onSaved();
     } catch (err) {

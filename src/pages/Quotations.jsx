@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAppData } from "@/hooks/useAppData";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { computeQuotationTotals, nextNumber, formatCurrency } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
@@ -33,14 +33,14 @@ export default function Quotations() {
     try {
       if (!projectId) {
         let client;
-        const matches = await base44.entities.Client.filter({ name: q.client_name });
+        const matches = await supabase.from('clients').filter({ name: q.client_name });
         if (matches.length) client = matches[0];
-        else client = await base44.entities.Client.create({ name: q.client_name, company_name: q.client_company, email: q.client_email, phone: q.client_phone, address: q.client_address });
+        else client = await supabase.from('clients').insert({ name: q.client_name, company_name: q.client_company, email: q.client_email, phone: q.client_phone, address: q.client_address });
         clientId = client.id; clientName = client.name;
         const y = new Date().getFullYear();
-        const allProjects = await base44.entities.Project.list();
+        const allProjects = await supabase.from('projects').select('*');
         const project_number = `PRJ-${y}-${String(allProjects.length + 1).padStart(4, "0")}`;
-        const project = await base44.entities.Project.create({
+        const project = await supabase.from('projects').insert({
           project_number, name: projectName || `${clientName} Project`,
           client_id: clientId, client_name: clientName,
           company_name: q.client_company, client_email: q.client_email, client_phone: q.client_phone, client_address: q.client_address,
@@ -49,23 +49,23 @@ export default function Quotations() {
         projectId = project.id; projectName = project.name;
       }
       const year = new Date().getFullYear();
-      const existingInv = await base44.entities.Invoice.list();
+      const existingInv = await supabase.from('invoices').select('*');
       const invoice_number = nextNumber("INV", year, existingInv);
       const due = new Date(); due.setDate(due.getDate() + 15);
-      const invoice = await base44.entities.Invoice.create({
+      const invoice = await supabase.from('invoices').insert({
         invoice_number, invoice_date: today, due_date: due.toISOString().slice(0, 10),
         client_id: clientId, client_name: clientName, project_id: projectId, project_name: projectName,
         quotation_id: q.id, quotation_number: q.quotation_number, items: q.items, subtotal: q.subtotal,
         discount: q.discount, tax: q.tax, tax_rate: q.tax_rate, total: q.total, status: "sent",
       });
-      await base44.entities.Quotation.update(q.id, { status: "approved", project_id: projectId, client_id: clientId, project_name: projectName, client_name: clientName, converted_invoice_id: invoice.id });
-      await base44.entities.AuditLog.create({ action: "quotation_approved", entity: "Quotation", entity_id: q.id, description: `Approved ${q.quotation_number} → created project & invoice ${invoice_number}` });
+      await supabase.from('quotations').update(q.id, { status: "approved", project_id: projectId, client_id: clientId, project_name: projectName, client_name: clientName, converted_invoice_id: invoice.id });
+      await supabase.from('audit_logs').insert({ action: "quotation_approved", entity: "Quotation", entity_id: q.id, description: `Approved ${q.quotation_number} → created project & invoice ${invoice_number}` });
       refresh(); toast({ title: "Approved — project & invoice created" });
       setViewQuote(null);
     } catch (err) { alert(err.message); }
   };
   const reject = async (q) => {
-    await base44.entities.Quotation.update(q.id, { status: "rejected" });
+    await supabase.from('quotations').update(q.id, { status: "rejected" });
     refresh(); toast({ title: "Quotation rejected" });
   };
 
@@ -165,7 +165,7 @@ function QuoteForm({ clients, projects, existing, onClose, onSaved }) {
     try {
       const year = new Date().getFullYear();
       const quotation_number = nextNumber("QT", year, existing);
-      await base44.entities.Quotation.create({
+      await supabase.from('quotations').insert({
         quotation_number, date: form.date, valid_until: form.valid_until,
         client_id: form.client_id || null, client_name: form.client_name,
         client_company: form.client_company || null, client_email: form.client_email || null,
@@ -174,7 +174,7 @@ function QuoteForm({ clients, projects, existing, onClose, onSaved }) {
         items, subtotal: totals.subtotal, discount: Number(form.discount), tax: totals.tax, tax_rate: Number(form.tax_rate), total: totals.total,
         notes: form.notes, terms: form.terms, status: "draft",
       });
-      await base44.entities.AuditLog.create({ action: "created", entity: "Quotation", description: `Created quotation ${quotation_number}` });
+      await supabase.from('audit_logs').insert({ action: "created", entity: "Quotation", description: `Created quotation ${quotation_number}` });
       onSaved();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };

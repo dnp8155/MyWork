@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useAppData } from "@/hooks/useAppData";
-import { computeProjectFinancials, formatCurrency, daysUntil } from "@/lib/finance";
+import { computeProjectFinancials, formatCurrency } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import StatCard from "@/components/StatCard";
@@ -15,7 +15,7 @@ import ProjectForm from "@/components/projects/ProjectForm";
 import DocumentsSection from "@/components/projects/DocumentsSection";
 import {
   ArrowLeft, Wallet, TrendingUp, TrendingDown, Clock, Percent, Users,
-  Plus, Globe, HardDrive, Server, FileText, Receipt, History,
+  Plus, Globe, HardDrive, Server, History,
   KeyRound, Eye, EyeOff, Pencil, Trash2, Database, Github,
 } from "lucide-react";
 
@@ -63,16 +63,16 @@ export default function ProjectDetail() {
   const projectCredentials = (credentials || []).filter((c) => c.project_id === id);
   const deleteCredential = async (c) => {
     if (!window.confirm(`Delete credential "${c.title}"?`)) return;
-    await base44.entities.Credential.delete(c.id);
-    await base44.entities.AuditLog.create({ action: "deleted", entity: "Credential", entity_id: c.id, description: `Deleted credential "${c.title}"` });
+    await supabase.from('credentials').delete(c.id);
+    await supabase.from('audit_logs').insert({ action: "deleted", entity: "Credential", entity_id: c.id, description: `Deleted credential "${c.title}"` });
     refresh();
     toast({ title: "Credential deleted" });
   };
   const deletePayment = async (p) => {
     if (!window.confirm(`Delete payment ${p.payment_number || ""} of ${formatCurrency(p.amount)}?`)) return;
-    await base44.entities.Payment.delete(p.id);
-    await base44.entities.Transaction.deleteMany({ source_entity: "payment", source_id: p.id });
-    await base44.entities.AuditLog.create({ action: "payment_deleted", entity: "Project", entity_id: id, description: `Deleted payment of ${formatCurrency(p.amount)} from ${project.name}` });
+    await supabase.from('payments').delete(p.id);
+    await supabase.from('transactions').deleteMany({ source_entity: "payment", source_id: p.id });
+    await supabase.from('audit_logs').insert({ action: "payment_deleted", entity: "Project", entity_id: id, description: `Deleted payment of ${formatCurrency(p.amount)} from ${project.name}` });
     refresh();
     toast({ title: "Payment deleted" });
   };
@@ -342,7 +342,7 @@ export default function ProjectDetail() {
           { key: "vercel", field: "vercel_account_id", label: "Vercel", icon: Globe },
         ];
         const link = async (field, value, label) => {
-          await base44.entities.Project.update(project.id, { [field]: value || null });
+          await supabase.from('projects').update(project.id, { [field]: value || null });
           refresh();
           toast({ title: `${label} ${value ? "linked" : "unlinked"}` });
         };
@@ -507,33 +507,33 @@ function PaymentModal({ project, payment, onClose, onSaved }) {
     setSaving(true);
     try {
       if (editing) {
-        await base44.entities.Payment.update(payment.id, {
+        await supabase.from('payments').update(payment.id, {
           date: form.date, amount: Number(form.amount), payment_method: form.payment_method,
           reference: form.reference, notes: form.notes,
         });
-        const txns = await base44.entities.Transaction.filter({ source_entity: "payment", source_id: payment.id });
+        const txns = await supabase.from('transactions').filter({ source_entity: "payment", source_id: payment.id });
         for (const t of txns) {
-          await base44.entities.Transaction.update(t.id, { date: form.date, amount: Number(form.amount), payment_method: form.payment_method, reference: form.reference });
+          await supabase.from('transactions').update(t.id, { date: form.date, amount: Number(form.amount), payment_method: form.payment_method, reference: form.reference });
         }
-        await base44.entities.AuditLog.create({ action: "payment_updated", entity: "Project", entity_id: project.id, description: `Updated payment of ${formatCurrency(form.amount)} for ${project.name}` });
+        await supabase.from('audit_logs').insert({ action: "payment_updated", entity: "Project", entity_id: project.id, description: `Updated payment of ${formatCurrency(form.amount)} for ${project.name}` });
         onSaved();
         return;
       }
       const year = new Date().getFullYear();
-      const existing = await base44.entities.Payment.list();
+      const existing = await supabase.from('payments').select('*');
       const payment_number = `PAY-${year}-${String(existing.length + 1).padStart(4, "0")}`;
-      const created = await base44.entities.Payment.create({
+      const created = await supabase.from('payments').insert({
         ...form, amount: Number(form.amount), payment_number,
         client_id: project.client_id, client_name: project.client_name,
         project_id: project.id, project_name: project.name, type: "project",
       });
-      await base44.entities.Transaction.create({
+      await supabase.from('transactions').insert({
         transaction_number: `TXN-${Date.now()}`, date: form.date, type: "income", category: "project_payment",
         amount: Number(form.amount), project_id: project.id, project_name: project.name,
         client_id: project.client_id, client_name: project.client_name, payment_method: form.payment_method,
         reference: form.reference, description: `Payment for ${project.name}`, source_entity: "payment", source_id: created.id,
       });
-      await base44.entities.AuditLog.create({ action: "payment_recorded", entity: "Project", entity_id: project.id, description: `Recorded payment of ${formatCurrency(form.amount)} for ${project.name}` });
+      await supabase.from('audit_logs').insert({ action: "payment_recorded", entity: "Project", entity_id: project.id, description: `Recorded payment of ${formatCurrency(form.amount)} for ${project.name}` });
       onSaved();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };
@@ -570,20 +570,20 @@ function ExpenseModal({ project, onClose, onSaved }) {
     setSaving(true);
     try {
       const year = new Date().getFullYear();
-      const existing = await base44.entities.Expense.list();
+      const existing = await supabase.from('expenses').select('*');
       const expense_number = `EXP-${year}-${String(existing.length + 1).padStart(4, "0")}`;
-      const expense = await base44.entities.Expense.create({
+      const expense = await supabase.from('expenses').insert({
         ...form, amount: Number(form.amount), expense_number,
         project_id: project.id, project_name: project.name,
         client_id: project.client_id, client_name: project.client_name, source: "manual",
       });
-      await base44.entities.Transaction.create({
+      await supabase.from('transactions').insert({
         transaction_number: `TXN-${Date.now()}`, date: form.date, type: "expense", category: form.category,
         amount: Number(form.amount), project_id: project.id, project_name: project.name,
         client_id: project.client_id, client_name: project.client_name, payment_method: form.payment_method,
         description: form.description, source_entity: "expense", source_id: expense.id,
       });
-      await base44.entities.AuditLog.create({ action: "expense_added", entity: "Project", entity_id: project.id, description: `Added expense of ${formatCurrency(form.amount)} (${form.category}) to ${project.name}` });
+      await supabase.from('audit_logs').insert({ action: "expense_added", entity: "Project", entity_id: project.id, description: `Added expense of ${formatCurrency(form.amount)} (${form.category}) to ${project.name}` });
       onSaved();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };

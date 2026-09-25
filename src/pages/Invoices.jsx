@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "@/hooks/useAppData";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { computeInvoiceFinancials, nextNumber, formatCurrency } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
@@ -27,9 +27,9 @@ export default function Invoices() {
 
   const recordPayment = async (inv, amount, method, reference) => {
     const year = new Date().getFullYear();
-    const existing = await base44.entities.Payment.list();
+    const existing = await supabase.from('payments').select('*');
     const payment_number = `PAY-${year}-${String(existing.length + 1).padStart(4, "0")}`;
-    const payment = await base44.entities.Payment.create({
+    const payment = await supabase.from('payments').insert({
       payment_number, date: new Date().toISOString().slice(0, 10), amount: Number(amount), payment_method: method, reference,
       client_id: inv.client_id, client_name: inv.client_name, project_id: inv.project_id, project_name: inv.project_name,
       invoice_id: inv.id, invoice_number: inv.invoice_number, type: "invoice",
@@ -37,13 +37,13 @@ export default function Invoices() {
     const newPaid = computeInvoiceFinancials(inv, [...(payments || []), { invoice_id: inv.id, amount: Number(amount) }]).paid;
     let status = inv.status;
     if (newPaid >= inv.total) status = "paid"; else if (newPaid > 0) status = "partially_paid";
-    await base44.entities.Invoice.update(inv.id, { status });
-    await base44.entities.Transaction.create({
+    await supabase.from('invoices').update(inv.id, { status });
+    await supabase.from('transactions').insert({
       transaction_number: `TXN-${Date.now()}`, date: new Date().toISOString().slice(0, 10), type: "income", category: "invoice_payment",
       amount: Number(amount), project_id: inv.project_id, project_name: inv.project_name, client_id: inv.client_id, client_name: inv.client_name,
       invoice_id: inv.id, payment_method: method, reference, description: `Payment for invoice ${inv.invoice_number}`, source_entity: "payment", source_id: payment.id,
     });
-    await base44.entities.AuditLog.create({ action: "payment_recorded", entity: "Invoice", entity_id: inv.id, description: `Recorded ${formatCurrency(amount)} against ${inv.invoice_number}` });
+    await supabase.from('audit_logs').insert({ action: "payment_recorded", entity: "Invoice", entity_id: inv.id, description: `Recorded ${formatCurrency(amount)} against ${inv.invoice_number}` });
     refresh(); toast({ title: "Payment recorded" }); setPayModal(null);
   };
 
@@ -127,11 +127,11 @@ function InvoiceForm({ clients, projects, existing, onClose, onSaved }) {
       const invoice_number = nextNumber("INV", year, existing);
       const client = clients.find((c) => c.id === form.client_id);
       const project = projects.find((p) => p.id === form.project_id);
-      await base44.entities.Invoice.create({
+      await supabase.from('invoices').insert({
         ...form, invoice_number, discount: Number(form.discount), tax_rate: Number(form.tax_rate),
         items, subtotal, tax, total, status: "sent", client_name: client?.name, project_name: project?.name,
       });
-      await base44.entities.AuditLog.create({ action: "created", entity: "Invoice", description: `Created invoice ${invoice_number}` });
+      await supabase.from('audit_logs').insert({ action: "created", entity: "Invoice", description: `Created invoice ${invoice_number}` });
       onSaved();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };

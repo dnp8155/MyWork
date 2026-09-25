@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAppData } from "@/hooks/useAppData";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { formatCurrency, nextNumber } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
@@ -78,11 +78,11 @@ function PaymentForm({ clients, projects, invoices, existing, onClose, onSaved }
       const client = clients.find((c) => c.id === form.client_id);
       const project = projects.find((p) => p.id === form.project_id);
       const invoice = invoices.find((i) => i.id === form.invoice_id);
-      const payment = await base44.entities.Payment.create({
+      const payment = await supabase.from('payments').insert({
         ...form, amount: Number(form.amount), payment_number,
         client_name: client?.name, project_name: project?.name, invoice_number: invoice?.invoice_number,
       });
-      await base44.entities.Transaction.create({
+      await supabase.from('transactions').insert({
         transaction_number: `TXN-${Date.now()}`, date: form.date, type: "income", category: form.invoice_id ? "invoice_payment" : "project_payment",
         amount: Number(form.amount), project_id: form.project_id, project_name: project?.name, client_id: form.client_id, client_name: client?.name,
         invoice_id: form.invoice_id, payment_method: form.payment_method, reference: form.reference, description: `Payment recorded`, source_entity: "payment", source_id: payment.id,
@@ -90,13 +90,13 @@ function PaymentForm({ clients, projects, invoices, existing, onClose, onSaved }
       // update invoice status if linked
       if (form.invoice_id) {
         const inv = invoice;
-        const allPayments = await base44.entities.Payment.list();
+        const allPayments = await supabase.from('payments').select('*');
         const paid = allPayments.filter((p) => p.invoice_id === inv.id).reduce((s, p) => s + Number(p.amount || 0), 0);
         let status = inv.status;
         if (paid >= inv.total) status = "paid"; else if (paid > 0) status = "partially_paid";
-        await base44.entities.Invoice.update(inv.id, { status });
+        await supabase.from('invoices').update(inv.id, { status });
       }
-      await base44.entities.AuditLog.create({ action: "payment_recorded", entity: "Payment", entity_id: payment.id, description: `Recorded payment ${formatCurrency(form.amount)}` });
+      await supabase.from('audit_logs').insert({ action: "payment_recorded", entity: "Payment", entity_id: payment.id, description: `Recorded payment ${formatCurrency(form.amount)}` });
       onSaved();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };

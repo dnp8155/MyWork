@@ -5,7 +5,7 @@ import StatCard from "@/components/StatCard";
 import PageHeader from "@/components/PageHeader";
 import {
   Wallet, TrendingUp, TrendingDown, Clock, Globe, HardDrive, Repeat,
-  FolderKanban, CheckCircle2, PauseCircle, FileText, Receipt, AlertTriangle,
+  FolderKanban, FileText, Receipt, AlertTriangle,
   CalendarClock,
 } from "lucide-react";
 import {

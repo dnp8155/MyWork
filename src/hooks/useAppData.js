@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 
 // Central data fetcher: loads all entities once, caches them at module level,
 // and reuses the cache across page navigations (TTL) to avoid API rate limits.
@@ -19,23 +19,23 @@ async function fetchAll() {
       notifications, auditLogs, settings, credentials,
       projectMembers, projectDocuments,
     ] = await Promise.all([
-      base44.entities.Client.list(),
-      base44.entities.Base44Account.list(),
-      base44.entities.Project.list(),
-      base44.entities.Payment.list(),
-      base44.entities.RecurringPaymentSchedule.list(),
-      base44.entities.Quotation.list(),
-      base44.entities.Invoice.list(),
-      base44.entities.Domain.list(),
-      base44.entities.HostingAccount.list(),
-      base44.entities.Expense.list(),
-      base44.entities.Transaction.list(),
-      base44.entities.Notification.list(),
-      base44.entities.AuditLog.list(),
-      base44.entities.CompanySettings.list(),
-      base44.entities.Credential.list(),
-      base44.entities.ProjectMember.list(),
-      base44.entities.ProjectDocument.list(),
+      supabase.from('clients').select('*'),
+      supabase.from('base44_accounts').select('*'),
+      supabase.from('projects').select('*'),
+      supabase.from('payments').select('*'),
+      supabase.from('recurring_payment_schedules').select('*'),
+      supabase.from('quotations').select('*'),
+      supabase.from('invoices').select('*'),
+      supabase.from('domains').select('*'),
+      supabase.from('hosting_accounts').select('*'),
+      supabase.from('expenses').select('*'),
+      supabase.from('transactions').select('*'),
+      supabase.from('notifications').select('*'),
+      supabase.from('audit_logs').select('*'),
+      supabase.from('company_settings').select('*'),
+      supabase.from('credentials').select('*'),
+      supabase.from('project_members').select('*'),
+      supabase.from('project_documents').select('*'),
     ]);
     cache.data = {
       clients, base44Accounts, projects, payments, recurringSchedules,

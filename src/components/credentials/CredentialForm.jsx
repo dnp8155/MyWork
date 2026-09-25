@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import Modal from "@/components/Modal";
 import { Input, Select, Textarea, fieldClass } from "@/components/FormFields";
 import { Eye, EyeOff, RefreshCw, KeyRound } from "lucide-react";
@@ -65,14 +65,14 @@ export default function CredentialForm({ credential, projects = [], fixedProject
         client_name: project?.client_name || "",
       };
       if (credential) {
-        await base44.entities.Credential.update(credential.id, payload);
-        await base44.entities.AuditLog.create({
+        await supabase.from('credentials').update(credential.id, payload);
+        await supabase.from('audit_logs').insert({
           action: "updated", entity: "Credential", entity_id: credential.id,
           description: `Updated credential "${payload.title}"`,
         });
       } else {
-        const created = await base44.entities.Credential.create(payload);
-        await base44.entities.AuditLog.create({
+        const created = await supabase.from('credentials').insert(payload);
+        await supabase.from('audit_logs').insert({
           action: "created", entity: "Credential", entity_id: created.id,
           description: `Added credential "${payload.title}"${payload.project_name ? ` for ${payload.project_name}` : ""}`,
         });

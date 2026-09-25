@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import PageHeader from "@/components/PageHeader";
-import { Input, Textarea, Select } from "@/components/FormFields";
+import { Input, Textarea } from "@/components/FormFields";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Building2, DollarSign, Users } from "lucide-react";
+import { Save, Building2, DollarSign } from "lucide-react";
 
 export default function Settings() {
   const [settings, setSettings] = useState(null);
@@ -13,7 +13,7 @@ export default function Settings() {
   const { toast } = useToast();
 
   useEffect(() => {
-    base44.entities.CompanySettings.list().then((s) => setSettings(s[0] || null));
+    supabase.from('company_settings').select('*').then((s) => setSettings(s[0] || null));
   }, []);
 
   const set = (k, v) => setSettings((s) => ({ ...s, [k]: v }));
@@ -21,9 +21,9 @@ export default function Settings() {
   const save = async () => {
     setSaving(true);
     try {
-      if (settings.id) await base44.entities.CompanySettings.update(settings.id, settings);
-      else { const created = await base44.entities.CompanySettings.create(settings); setSettings(created); }
-      await base44.entities.AuditLog.create({ action: "updated", entity: "CompanySettings", description: "Updated company settings" });
+      if (settings.id) await supabase.from('company_settings').update(settings.id, settings);
+      else { const created = await supabase.from('company_settings').insert(settings); setSettings(created); }
+      await supabase.from('audit_logs').insert({ action: "updated", entity: "CompanySettings", description: "Updated company settings" });
       toast({ title: "Settings saved" });
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };

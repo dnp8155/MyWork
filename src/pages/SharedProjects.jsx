@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "@/hooks/useAppData";
-import { computeProjectFinancials, formatCurrency } from "@/lib/finance";
+import { formatCurrency } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Image } from "@/components/ui/image";

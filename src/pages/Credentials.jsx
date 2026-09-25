@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAppData } from "@/hooks/useAppData";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
 import EmptyState from "@/components/EmptyState";
@@ -45,8 +45,8 @@ export default function Credentials() {
 
   const handleDelete = async (c) => {
     if (!window.confirm(`Delete credential "${c.title}"?`)) return;
-    await base44.entities.Credential.delete(c.id);
-    await base44.entities.AuditLog.create({ action: "deleted", entity: "Credential", entity_id: c.id, description: `Deleted credential "${c.title}"` });
+    await supabase.from('credentials').delete(c.id);
+    await supabase.from('audit_logs').insert({ action: "deleted", entity: "Credential", entity_id: c.id, description: `Deleted credential "${c.title}"` });
     refresh();
     toast({ title: "Credential deleted" });
   };

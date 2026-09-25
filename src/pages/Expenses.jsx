@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useAppData } from "@/hooks/useAppData";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { formatCurrency, nextNumber } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
 import EmptyState from "@/components/EmptyState";
 import Modal from "@/components/Modal";
 import { Input, Select, Textarea } from "@/components/FormFields";
-import { Plus, TrendingDown, Globe, HardDrive } from "lucide-react";
+import { Plus, TrendingDown, Globe } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const CATEGORIES = ["domain","hosting","software","api","base44","server","development","marketing","employee_salary","other"];
@@ -79,16 +79,16 @@ function ExpenseForm({ projects, clients, existing, onClose, onSaved }) {
       const expense_number = nextNumber("EXP", year, existing);
       const project = projects.find((p) => p.id === form.project_id);
       const client = clients.find((c) => c.id === form.client_id) || (project ? clients.find((c) => c.id === project.client_id) : null);
-      const expense = await base44.entities.Expense.create({
+      const expense = await supabase.from('expenses').insert({
         ...form, amount: Number(form.amount), expense_number, source: "manual",
         project_name: project?.name, client_id: form.client_id || project?.client_id, client_name: client?.name,
       });
-      await base44.entities.Transaction.create({
+      await supabase.from('transactions').insert({
         transaction_number: `TXN-${Date.now()}`, date: form.date, type: "expense", category: form.category,
         amount: Number(form.amount), project_id: form.project_id, project_name: project?.name, client_id: form.client_id || project?.client_id, client_name: client?.name,
         payment_method: form.payment_method, description: form.description, source_entity: "expense", source_id: expense.id,
       });
-      await base44.entities.AuditLog.create({ action: "expense_added", entity: "Expense", entity_id: expense.id, description: `Added expense ${formatCurrency(form.amount)} (${form.category})` });
+      await supabase.from('audit_logs').insert({ action: "expense_added", entity: "Expense", entity_id: expense.id, description: `Added expense ${formatCurrency(form.amount)} (${form.category})` });
       onSaved();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };

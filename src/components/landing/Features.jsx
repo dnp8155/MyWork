@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  FolderKanban, Users, IndianRupee, FileText, Globe, HardDrive, KeyRound,
+  FolderKanban, Users, IndianRupee, FileText, Globe, KeyRound,
   CheckCircle2, ArrowRight, Clock, TrendingUp,
 } from "lucide-react";
 import { Reveal, SectionHead } from "@/components/landing/Reveal";

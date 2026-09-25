@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAppData } from "@/hooks/useAppData";
-import { monthlySeries, projectWiseBreakdown, expenseCategoryBreakdown, computeOutstanding, computeProjectFinancials, formatCurrency, isThisMonth } from "@/lib/finance";
+import { monthlySeries, projectWiseBreakdown, expenseCategoryBreakdown, computeOutstanding, formatCurrency, isThisMonth } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
 import {

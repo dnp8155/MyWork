@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { nextNumber, formatCurrency } from "@/lib/finance";
 import Modal from "@/components/Modal";
 import { Input, Textarea, Select } from "@/components/FormFields";
@@ -132,21 +132,21 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
 
       // ---- Edit mode: just update the project ----
       if (editing) {
-        await base44.entities.Project.update(project.id, payload);
-        await base44.entities.AuditLog.create({ action: "updated", entity: "Project", entity_id: project.id, description: `Updated project ${form.name}` });
+        await supabase.from('projects').update(project.id, payload);
+        await supabase.from('audit_logs').insert({ action: "updated", entity: "Project", entity_id: project.id, description: `Updated project ${form.name}` });
         onSaved();
         return;
       }
 
       // ---- Create mode ----
-      const created = await base44.entities.Project.create({
+      const created = await supabase.from('projects').insert({
         ...payload,
         project_number: nextNumber("PRJ", year, existing),
       });
 
       // Fixed: record advance payment (auto-subtracted from pending amount)
       if (!salaried && Number(advance) > 0) {
-        const payment = await base44.entities.Payment.create({
+        const payment = await supabase.from('payments').insert({
           payment_number: nextNumber("PAY", year, payments),
           date: today(),
           amount: Number(advance),
@@ -159,7 +159,7 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
           notes: "Advance paid at project creation",
           type: "project",
         });
-        await base44.entities.Transaction.create({
+        await supabase.from('transactions').insert({
           transaction_number: `TXN-${Date.now()}`, date: today(), type: "income", category: "project_payment",
           amount: Number(advance), project_id: created.id, project_name: created.name,
           client_id: form.client_id, client_name: contactName, payment_method: "bank_transfer",
@@ -185,13 +185,13 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
             installment_number: i + 1,
           });
         }
-        if (schedules.length) await base44.entities.RecurringPaymentSchedule.bulkCreate(schedules);
+        if (schedules.length) await supabase.from('recurring_payment_schedules').bulkCreate(schedules);
       }
 
       // Domain module
       if (domain.enabled && domain.domain_name) {
         const expense = (domain.purchased_by === "us" && domain.include_in_cost)
-          ? await base44.entities.Expense.create({
+          ? await supabase.from('expenses').insert({
               expense_number: nextNumber("EXP", year, expenses),
               date: domain.purchase_date || today(),
               amount: Number(domain.renewal_cost) || 0,
@@ -205,7 +205,7 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
               source: "domain",
             })
           : null;
-        await base44.entities.Domain.create({
+        await supabase.from('domains').insert({
           domain_name: domain.domain_name,
           registrar: domain.registrar,
           purchase_date: domain.purchase_date,
@@ -225,7 +225,7 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
       // Hosting module
       if (hosting.enabled && hosting.provider) {
         const expense = (hosting.purchased_by === "us" && hosting.include_in_cost)
-          ? await base44.entities.Expense.create({
+          ? await supabase.from('expenses').insert({
               expense_number: nextNumber("EXP", year, expenses),
               date: today(),
               amount: Number(hosting.cost) || 0,
@@ -239,7 +239,7 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
               source: "hosting",
             })
           : null;
-        await base44.entities.HostingAccount.create({
+        await supabase.from('hosting_accounts').insert({
           provider: hosting.provider,
           plan: hosting.plan,
           name: hosting.name || hosting.provider,
@@ -255,7 +255,7 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
         });
       }
 
-      await base44.entities.AuditLog.create({ action: "created", entity: "Project", entity_id: created.id, description: `Created project ${form.name}` });
+      await supabase.from('audit_logs').insert({ action: "created", entity: "Project", entity_id: created.id, description: `Created project ${form.name}` });
       onSaved();
     } catch (err) {
       alert("Error saving project: " + err.message);

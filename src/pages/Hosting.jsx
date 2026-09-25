@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAppData } from "@/hooks/useAppData";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { formatCurrency, nextNumber, daysUntil } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
@@ -73,26 +73,26 @@ function HostingForm({ projects, clients, expenses, onClose, onSaved }) {
     try {
       const project = projects.find((p) => p.id === form.project_id);
       const client = clients.find((c) => c.id === form.client_id) || (project ? clients.find((c) => c.id === project.client_id) : null);
-      const hosting = await base44.entities.HostingAccount.create({
+      const hosting = await supabase.from('hosting_accounts').insert({
         ...form, cost: Number(form.cost),
         project_name: project?.name, client_id: form.client_id || project?.client_id, client_name: client?.name, status: "active",
       });
       if (form.purchased_by === "us" && Number(form.cost) > 0) {
         const year = new Date().getFullYear();
         const expense_number = nextNumber("EXP", year, expenses);
-        const expense = await base44.entities.Expense.create({
+        const expense = await supabase.from('expenses').insert({
           expense_number, date: form.purchase_date, amount: Number(form.cost), category: "hosting", subcategory: form.provider,
           project_id: form.project_id, project_name: project?.name, client_id: form.client_id || project?.client_id, client_name: client?.name,
           vendor: form.provider, payment_method: "bank_transfer", description: `Hosting ${form.provider} (${form.plan})`, source: "hosting", linked_hosting_id: hosting.id,
         });
-        await base44.entities.HostingAccount.update(hosting.id, { expense_id: expense.id });
-        await base44.entities.Transaction.create({
+        await supabase.from('hosting_accounts').update(hosting.id, { expense_id: expense.id });
+        await supabase.from('transactions').insert({
           transaction_number: `TXN-${Date.now()}`, date: form.purchase_date, type: "expense", category: "hosting",
           amount: Number(form.cost), project_id: form.project_id, project_name: project?.name, client_id: form.client_id || project?.client_id, client_name: client?.name,
           description: `Hosting ${form.provider}`, source_entity: "hosting", source_id: hosting.id,
         });
       }
-      await base44.entities.AuditLog.create({ action: "created", entity: "Hosting", entity_id: hosting.id, description: `Added hosting ${form.provider}` });
+      await supabase.from('audit_logs').insert({ action: "created", entity: "Hosting", entity_id: hosting.id, description: `Added hosting ${form.provider}` });
       onSaved();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };

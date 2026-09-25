@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { supabase } from "@/api/supabaseClient";
 import { Image } from "@/components/ui/image";
 import NotificationBell from "@/components/NotificationBell";
 import {
   LayoutDashboard, FolderKanban, Users, Server, FileText, Receipt, Share2,
   Globe, HardDrive, BarChart3, Settings as SettingsIcon,
-  Menu, X, LogOut, Search, KeyRound, PanelLeftClose, PanelLeftOpen
+  Menu, LogOut, Search, KeyRound, PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 
 const navItems = [
@@ -36,7 +36,8 @@ export default function Layout() {
   }, []);
 
   const handleLogout = async () => {
-    await base44.auth.logout();
+    await supabase.auth.signOut();
+    window.location.href='/login';
   };
 
   return (

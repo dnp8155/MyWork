@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAppData } from "@/hooks/useAppData";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { computeClientFinancials, nextNumber, formatCurrency } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
@@ -73,8 +73,8 @@ function ClientForm({ existing, onClose, onSaved }) {
     e.preventDefault(); setSaving(true);
     try {
       const client_id = nextNumber("CL", null, existing.map((c) => ({ client_id: c.client_id })));
-      await base44.entities.Client.create({ ...form, client_id });
-      await base44.entities.AuditLog.create({ action: "created", entity: "Client", description: `Created client ${form.name}` });
+      await supabase.from('clients').insert({ ...form, client_id });
+      await supabase.from('audit_logs').insert({ action: "created", entity: "Client", description: `Created client ${form.name}` });
       onSaved();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };

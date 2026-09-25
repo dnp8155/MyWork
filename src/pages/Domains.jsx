@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAppData } from "@/hooks/useAppData";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { formatCurrency, nextNumber, daysUntil } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
@@ -80,7 +80,7 @@ function DomainForm({ projects, clients, expenses, onClose, onSaved }) {
     try {
       const project = projects.find((p) => p.id === form.project_id);
       const client = clients.find((c) => c.id === form.client_id) || (project ? clients.find((c) => c.id === project.client_id) : null);
-      const domain = await base44.entities.Domain.create({
+      const domain = await supabase.from('domains').insert({
         ...form, purchase_cost: Number(form.purchase_cost), renewal_cost: Number(form.renewal_cost),
         project_name: project?.name, client_id: form.client_id || project?.client_id, client_name: client?.name,
         status: "active",
@@ -90,19 +90,19 @@ function DomainForm({ projects, clients, expenses, onClose, onSaved }) {
         const year = new Date().getFullYear();
         const expense_number = nextNumber("EXP", year, expenses);
         const amount = Number(form.renewal_cost) || Number(form.purchase_cost);
-        const expense = await base44.entities.Expense.create({
+        const expense = await supabase.from('expenses').insert({
           expense_number, date: form.purchase_date, amount, category: "domain", subcategory: form.domain_name,
           project_id: form.project_id, project_name: project?.name, client_id: form.client_id || project?.client_id, client_name: client?.name,
           vendor: form.registrar, payment_method: "bank_transfer", description: `Domain ${form.domain_name} (${form.registrar})`, source: "domain", linked_domain_id: domain.id,
         });
-        await base44.entities.Domain.update(domain.id, { expense_id: expense.id });
-        await base44.entities.Transaction.create({
+        await supabase.from('domains').update(domain.id, { expense_id: expense.id });
+        await supabase.from('transactions').insert({
           transaction_number: `TXN-${Date.now()}`, date: form.purchase_date, type: "expense", category: "domain",
           amount, project_id: form.project_id, project_name: project?.name, client_id: form.client_id || project?.client_id, client_name: client?.name,
           description: `Domain ${form.domain_name}`, source_entity: "domain", source_id: domain.id,
         });
       }
-      await base44.entities.AuditLog.create({ action: "created", entity: "Domain", entity_id: domain.id, description: `Added domain ${form.domain_name}` });
+      await supabase.from('audit_logs').insert({ action: "created", entity: "Domain", entity_id: domain.id, description: `Added domain ${form.domain_name}` });
       onSaved();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };

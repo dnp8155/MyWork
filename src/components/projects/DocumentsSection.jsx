@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import { Upload, FileText, FileArchive, FileSpreadsheet, Download, Trash2, Link2, Copy, Check, Pencil } from "lucide-react";
 
@@ -28,7 +28,7 @@ export default function DocumentsSection({ project, documents, onChanged }) {
         const me = await base44.auth.me();
         uploadedBy = me?.full_name || "";
       } catch (err) { /* ignore */ }
-      await base44.entities.ProjectDocument.create({
+      await supabase.from('project_documents').insert({
         project_id: project.id,
         project_name: project.name,
         title: file.name,
@@ -37,7 +37,7 @@ export default function DocumentsSection({ project, documents, onChanged }) {
         file_type: uploadType,
         uploaded_by: uploadedBy,
       });
-      await base44.entities.AuditLog.create({
+      await supabase.from('audit_logs').insert({
         action: "created", entity: "ProjectDocument", entity_id: project.id,
         description: `Uploaded ${TYPE_META[uploadType].label} "${file.name}" to ${project.name}`,
       });
@@ -53,8 +53,8 @@ export default function DocumentsSection({ project, documents, onChanged }) {
 
   const deleteDoc = async (d) => {
     if (!window.confirm(`Delete "${d.title}"?`)) return;
-    await base44.entities.ProjectDocument.delete(d.id);
-    await base44.entities.AuditLog.create({
+    await supabase.from('project_documents').delete().eq('id', d.id);
+    await supabase.from('audit_logs').insert({
       action: "deleted", entity: "ProjectDocument", entity_id: d.id,
       description: `Deleted document "${d.title}" from ${project.name}`,
     });
@@ -63,7 +63,7 @@ export default function DocumentsSection({ project, documents, onChanged }) {
   };
 
   const savePublicLink = async (d) => {
-    await base44.entities.ProjectDocument.update(d.id, { public_link: linkValue.trim() });
+    await supabase.from('project_documents').update({ public_link: linkValue.trim() }).eq('id', d.id);
     setEditingLink(null);
     onChanged?.();
     toast({ title: "Public link saved" });

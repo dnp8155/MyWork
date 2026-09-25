@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "@/hooks/useAppData";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { computeProjectFinancials, formatCurrency } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
@@ -52,8 +52,8 @@ export default function Projects() {
 
   const archiveProject = async (p) => {
     if (!window.confirm(`Archive project "${p.name}"?`)) return;
-    await base44.entities.Project.update(p.id, { status: "archived" });
-    await base44.entities.AuditLog.create({
+    await supabase.from('projects').update(p.id, { status: "archived" });
+    await supabase.from('audit_logs').insert({
       action: "updated", entity: "Project", entity_id: p.id,
       description: `Archived project ${p.name}`,
     });
