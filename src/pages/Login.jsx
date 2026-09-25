@@ -43,7 +43,8 @@ export default function Login() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await supabase.auth.signInWithPassword({ email: email.trim(), password: password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: password });
+      if (error) throw error;
       window.location.href = destination;
     } catch {
       setError("Invalid email or password.");

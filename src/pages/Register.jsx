@@ -57,7 +57,8 @@ export default function Register() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await supabase.auth.signUp({ email: email.trim(), password });
+      const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+      if (error) throw error;
       setError("");
       setStep("otp");
     } catch (err) {
@@ -76,8 +77,9 @@ export default function Register() {
     setError("");
     setLoading(true);
     try {
-      const result = await supabase.auth.verifyOtp({ email: email.trim(), token: otpCode, type: 'signup' });
-      if (result?.access_token) {
+      const { data, error } = await supabase.auth.verifyOtp({ email: email.trim(), token: otpCode, type: 'signup' });
+      if (error) throw error;
+      if (data?.session?.access_token) {
         
         // Save the provided name on the new account (best effort)
         try {
@@ -95,7 +97,8 @@ export default function Register() {
   const handleResend = async () => {
     setError("");
     try {
-      await supabase.auth.resend({ type: 'signup', email: email.trim() });
+      const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim() });
+      if (error) throw error;
       toast({
         title: "Code sent",
         description: "Check your email for the new code.",

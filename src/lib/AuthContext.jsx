@@ -81,7 +81,8 @@ export const AuthProvider = ({ children }) => {
     try {
       // Now check if the user is authenticated
       setIsLoadingAuth(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) throw error || new Error("Not authenticated");
       setUser(user);
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
