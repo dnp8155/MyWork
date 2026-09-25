@@ -1,0 +1,214 @@
+import { getSupabase } from "./supabaseClient";
+
+// Entity name (PascalCase) → Supabase table name (snake_case plural)
+const tableMap = {
+  Client: "clients",
+  Project: "projects",
+  Invoice: "invoices",
+  Quotation: "quotations",
+  Payment: "payments",
+  Expense: "expenses",
+  Transaction: "transactions",
+  Domain: "domains",
+  HostingAccount: "hosting_accounts",
+  Base44Account: "base44_accounts",
+  Credential: "credentials",
+  ProjectMember: "project_members",
+  ProjectDocument: "project_documents",
+  RecurringPaymentSchedule: "recurring_payment_schedules",
+  Notification: "notifications",
+  AuditLog: "audit_logs",
+  CompanySettings: "company_settings",
+};
+
+let cachedUserId;
+
+async function getUserId() {
+  if (cachedUserId !== undefined) return cachedUserId;
+  try {
+    const { base44 } = await import("@/api/base44Client");
+    const user = await base44.auth.me();
+    cachedUserId = user?.id || null;
+  } catch {
+    cachedUserId = null;
+  }
+  return cachedUserId;
+}
+
+// Translates MongoDB-style filter queries to Supabase PostgREST filters
+function applyFilter(q, query) {
+  if (!query || typeof query !== "object") return q;
+  for (const [key, value] of Object.entries(query)) {
+    if (value === null || value === undefined) {
+      q = q.is(key, null);
+    } else if (typeof value === "object" && !Array.isArray(value)) {
+      for (const [op, opVal] of Object.entries(value)) {
+        if (op === "$gte") q = q.gte(key, opVal);
+        else if (op === "$lte") q = q.lte(key, opVal);
+        else if (op === "$gt") q = q.gt(key, opVal);
+        else if (op === "$lt") q = q.lt(key, opVal);
+        else if (op === "$ne") q = q.neq(key, opVal);
+        else if (op === "$in") q = q.in(key, opVal);
+        else if (op === "$nin") q = q.not(key, opVal);
+        else q = q.eq(key, opVal);
+      }
+    } else {
+      q = q.eq(key, value);
+    }
+  }
+  return q;
+}
+
+function applySort(q, sort) {
+  if (!sort) return q.order("created_date", { ascending: false });
+  const desc = sort.startsWith("-");
+  const col = desc ? sort.slice(1) : sort;
+  return q.order(col, { ascending: !desc });
+}
+
+function makeEntity(entityName) {
+  const table = tableMap[entityName];
+
+  return {
+    async list(sort, limit) {
+      const sb = await getSupabase();
+      let q = sb.from(table).select("*");
+      q = applySort(q, sort);
+      if (limit) q = q.limit(limit);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data || [];
+    },
+
+    async filter(query, sort, limit) {
+      const sb = await getSupabase();
+      let q = sb.from(table).select("*");
+      q = applyFilter(q, query);
+      q = applySort(q, sort);
+      if (limit) q = q.limit(limit);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data || [];
+    },
+
+    async get(id) {
+      const sb = await getSupabase();
+      const { data, error } = await sb.from(table).select("*").eq("id", id).single();
+      if (error) throw error;
+      return data;
+    },
+
+    async create(record) {
+      const sb = await getSupabase();
+      const userId = await getUserId();
+      const payload = { ...record };
+      if (userId && !payload.created_by_id) payload.created_by_id = userId;
+      const { data, error } = await sb.from(table).insert(payload).select().single();
+      if (error) throw error;
+      return data;
+    },
+
+    async bulkCreate(records) {
+      const sb = await getSupabase();
+      const userId = await getUserId();
+      const payload = records.map((r) =>
+        userId && !r.created_by_id ? { ...r, created_by_id: userId } : r
+      );
+      const { data, error } = await sb.from(table).insert(payload).select();
+      if (error) throw error;
+      return data || [];
+    },
+
+    async update(id, changes) {
+      const sb = await getSupabase();
+      const { data, error } = await sb
+        .from(table)
+        .update(changes)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+
+    async updateMany(query, update) {
+      const sb = await getSupabase();
+      const setFields = (update && update.$set) || update;
+      let q = sb.from(table).update(setFields);
+      q = applyFilter(q, query);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data || [];
+    },
+
+    async bulkUpdate(records) {
+      const sb = await getSupabase();
+      const { data, error } = await sb
+        .from(table)
+        .upsert(records, { onConflict: "id" })
+        .select();
+      if (error) throw error;
+      return data || [];
+    },
+
+    async delete(id) {
+      const sb = await getSupabase();
+      const { error } = await sb.from(table).delete().eq("id", id);
+      if (error) throw error;
+      return { id };
+    },
+
+    async deleteMany(query) {
+      const sb = await getSupabase();
+      let q = sb.from(table).delete();
+      q = applyFilter(q, query);
+      const { error } = await q;
+      if (error) throw error;
+      return [];
+    },
+
+    subscribe(callback) {
+      let channel = null;
+      let unsubscribed = false;
+      (async () => {
+        const sb = await getSupabase();
+        if (unsubscribed) return;
+        channel = sb
+          .channel(`${table}_changes`)
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table },
+            (payload) => {
+              const type =
+                payload.eventType === "INSERT"
+                  ? "create"
+                  : payload.eventType === "UPDATE"
+                  ? "update"
+                  : "delete";
+              callback({
+                id: payload.new?.id || payload.old?.id,
+                type,
+                data: payload.new || payload.old,
+              });
+            }
+          )
+          .subscribe();
+      })();
+      return () => {
+        unsubscribed = true;
+        if (channel) channel.unsubscribe();
+      };
+    },
+
+    schema() {
+      return { type: "object", properties: {} };
+    },
+  };
+}
+
+const supabaseEntities = {};
+for (const name of Object.keys(tableMap)) {
+  supabaseEntities[name] = makeEntity(name);
+}
+
+export { supabaseEntities };
