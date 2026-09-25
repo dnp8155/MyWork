@@ -188,7 +188,7 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
             installment_number: i + 1,
           });
         }
-        if (schedules.length) await supabase.from('recurring_payment_schedules').bulkCreate(schedules);
+        if (schedules.length) await supabase.from('recurring_payment_schedules').insert(schedules);
       }
 
       // Domain module
