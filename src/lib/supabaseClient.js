@@ -12,10 +12,11 @@ export async function getSupabase() {
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
-    const { base44 } = await import("@/api/base44Client");
-    const res = await base44.functions.invoke("supabaseConfig", {});
-    const { url, anonKey } = res?.data || res || {};
-    if (!url || !anonKey) throw new Error("Supabase config not available");
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    if (!url || !anonKey) throw new Error("Supabase config not available (Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY)");
+    
     client = createClient(url, anonKey, {
       realtime: { params: { eventsPerSecond: 10 } },
     });
