@@ -48,7 +48,7 @@ export default function Projects() {
       p.client_name?.toLowerCase().includes(search.toLowerCase()) ||
       p.project_number?.toLowerCase().includes(search.toLowerCase())
     )
-    .sort((a, b) => (b.created_date || "").localeCompare(a.created_date || ""));
+    .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
 
   const archiveProject = async (p) => {
     if (!window.confirm(`Archive project "${p.name}"?`)) return;

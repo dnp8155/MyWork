@@ -20,7 +20,7 @@ export default function Quotations() {
   const [viewQuote, setViewQuote] = useState(null);
   const { toast } = useToast();
 
-  const filtered = (quotations || []).filter((q) => filter === "all" || q.status === filter).sort((a, b) => (b.created_date || "").localeCompare(a.created_date || ""));
+  const filtered = (quotations || []).filter((q) => filter === "all" || q.status === filter).sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
   const totalValue = (quotations || []).reduce((s, q) => s + (Number(q.total) || 0), 0);
   const approved = (quotations || []).filter((q) => q.status === "approved").length;
 

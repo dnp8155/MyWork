@@ -1,13 +1,15 @@
 -- ============================================================
--- MeWork — Supabase Migration (17 tables)
+-- MyWork — Supabase Migration (17 tables)
 -- Run this in: Supabase Dashboard → SQL Editor → New query
 -- ============================================================
+-- Convention: created_at / updated_at (standard Supabase)
+-- ============================================================
 
--- Updated_date trigger function (shared by all tables)
-CREATE OR REPLACE FUNCTION update_updated_date()
+-- Shared trigger function for auto-updating updated_at
+CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_date = now();
+  NEW.updated_at = now();
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -17,8 +19,8 @@ $$ LANGUAGE plpgsql;
 -- ============================================================
 CREATE TABLE IF NOT EXISTS clients (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   client_id text,
   name text NOT NULL,
@@ -31,15 +33,15 @@ CREATE TABLE IF NOT EXISTS clients (
   pan text,
   notes text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON clients FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON clients FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 2. projects
 -- ============================================================
 CREATE TABLE IF NOT EXISTS projects (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   project_number text,
   name text NOT NULL,
@@ -72,15 +74,15 @@ CREATE TABLE IF NOT EXISTS projects (
   payment_due_day numeric DEFAULT 1,
   billing_frequency text DEFAULT 'monthly'
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON projects FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON projects FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 3. invoices
 -- ============================================================
 CREATE TABLE IF NOT EXISTS invoices (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   invoice_number text,
   invoice_date date,
@@ -100,15 +102,15 @@ CREATE TABLE IF NOT EXISTS invoices (
   description text,
   status text DEFAULT 'draft'
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 4. quotations
 -- ============================================================
 CREATE TABLE IF NOT EXISTS quotations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   quotation_number text,
   date date,
@@ -132,15 +134,15 @@ CREATE TABLE IF NOT EXISTS quotations (
   status text DEFAULT 'draft',
   converted_invoice_id text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON quotations FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON quotations FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 5. payments
 -- ============================================================
 CREATE TABLE IF NOT EXISTS payments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   payment_number text,
   date date,
@@ -157,15 +159,15 @@ CREATE TABLE IF NOT EXISTS payments (
   notes text,
   type text DEFAULT 'project'
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON payments FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON payments FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 6. expenses
 -- ============================================================
 CREATE TABLE IF NOT EXISTS expenses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   expense_number text,
   date date,
@@ -185,15 +187,15 @@ CREATE TABLE IF NOT EXISTS expenses (
   linked_domain_id text,
   linked_hosting_id text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON expenses FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON expenses FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 7. transactions
 -- ============================================================
 CREATE TABLE IF NOT EXISTS transactions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   transaction_number text,
   date date,
@@ -211,15 +213,15 @@ CREATE TABLE IF NOT EXISTS transactions (
   source_entity text,
   source_id text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON transactions FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON transactions FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 8. domains
 -- ============================================================
 CREATE TABLE IF NOT EXISTS domains (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   domain_name text,
   registrar text,
@@ -237,15 +239,15 @@ CREATE TABLE IF NOT EXISTS domains (
   notes text,
   expense_id text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON domains FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON domains FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 9. hosting_accounts
 -- ============================================================
 CREATE TABLE IF NOT EXISTS hosting_accounts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   provider text,
   plan text,
@@ -264,15 +266,15 @@ CREATE TABLE IF NOT EXISTS hosting_accounts (
   notes text,
   expense_id text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON hosting_accounts FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON hosting_accounts FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 10. base44_accounts
 -- ============================================================
 CREATE TABLE IF NOT EXISTS base44_accounts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   account_name text NOT NULL,
   category text DEFAULT 'base44',
@@ -284,15 +286,15 @@ CREATE TABLE IF NOT EXISTS base44_accounts (
   team text,
   notes text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON base44_accounts FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON base44_accounts FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 11. credentials
 -- ============================================================
 CREATE TABLE IF NOT EXISTS credentials (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   title text NOT NULL,
   category text DEFAULT 'other',
@@ -305,15 +307,15 @@ CREATE TABLE IF NOT EXISTS credentials (
   client_name text,
   notes text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON credentials FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON credentials FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 12. project_members
 -- ============================================================
 CREATE TABLE IF NOT EXISTS project_members (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   project_id text NOT NULL,
   project_name text,
@@ -326,15 +328,15 @@ CREATE TABLE IF NOT EXISTS project_members (
   status text DEFAULT 'invited',
   notes text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON project_members FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON project_members FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 13. project_documents
 -- ============================================================
 CREATE TABLE IF NOT EXISTS project_documents (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   project_id text NOT NULL,
   project_name text,
@@ -346,15 +348,15 @@ CREATE TABLE IF NOT EXISTS project_documents (
   notes text,
   uploaded_by text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON project_documents FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON project_documents FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 14. recurring_payment_schedules
 -- ============================================================
 CREATE TABLE IF NOT EXISTS recurring_payment_schedules (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   project_id text NOT NULL,
   project_name text,
@@ -368,15 +370,15 @@ CREATE TABLE IF NOT EXISTS recurring_payment_schedules (
   installment_number numeric DEFAULT 1,
   description text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON recurring_payment_schedules FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON recurring_payment_schedules FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 15. notifications
 -- ============================================================
 CREATE TABLE IF NOT EXISTS notifications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   title text NOT NULL,
   message text,
@@ -387,15 +389,15 @@ CREATE TABLE IF NOT EXISTS notifications (
   related_id text,
   status text DEFAULT 'pending'
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON notifications FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON notifications FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 16. audit_logs
 -- ============================================================
 CREATE TABLE IF NOT EXISTS audit_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   user_id text,
   user_name text,
@@ -406,15 +408,15 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   old_value text,
   new_value text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON audit_logs FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON audit_logs FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- 17. company_settings
 -- ============================================================
 CREATE TABLE IF NOT EXISTS company_settings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_date timestamptz DEFAULT now(),
-  updated_date timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by_id text,
   company_name text NOT NULL DEFAULT 'My Agency',
   logo text,
@@ -437,7 +439,7 @@ CREATE TABLE IF NOT EXISTS company_settings (
   client_prefix text DEFAULT 'CL',
   description text
 );
-CREATE TRIGGER set_updated_date BEFORE UPDATE ON company_settings FOR EACH ROW EXECUTE FUNCTION update_updated_date();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON company_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- RLS Policies (permissive — tighten later for multi-user)

@@ -20,7 +20,7 @@ export default function Invoices() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const filtered = (invoices || []).filter((i) => filter === "all" || i.status === filter).sort((a, b) => (b.created_date || "").localeCompare(a.created_date || ""));
+  const filtered = (invoices || []).filter((i) => filter === "all" || i.status === filter).sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
   const totalInvoiced = (invoices || []).reduce((s, i) => s + (Number(i.total) || 0), 0);
   const totalPaid = (invoices || []).reduce((s, i) => s + computeInvoiceFinancials(i, payments).paid, 0);
   const totalPending = (invoices || []).reduce((s, i) => s + computeInvoiceFinancials(i, payments).pending, 0);

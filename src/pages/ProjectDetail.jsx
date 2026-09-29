@@ -430,7 +430,7 @@ export default function ProjectDetail() {
             <div className="space-y-2">{projectActivity.map((a) => (
               <div key={a.id} className="flex items-start gap-3 p-3 rounded-lg border border-slate-100">
                 <History className="w-4 h-4 text-slate-400 mt-0.5" />
-                <div><div className="text-sm text-slate-700">{a.description || a.action}</div><div className="text-xs text-slate-400">{a.user_name || "System"} • {new Date(a.created_date).toLocaleString()}</div></div>
+                <div><div className="text-sm text-slate-700">{a.description || a.action}</div><div className="text-xs text-slate-400">{a.user_name || "System"} • {new Date(a.created_at).toLocaleString()}</div></div>
               </div>
             ))}</div>
           )}

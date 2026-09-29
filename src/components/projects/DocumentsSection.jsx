@@ -128,7 +128,7 @@ export default function DocumentsSection({ project, documents, onChanged }) {
                   <div className="text-xs text-slate-400 flex items-center gap-1.5 flex-wrap">
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${meta.color}`}>{meta.label}</span>
                     {d.uploaded_by ? `Uploaded by ${d.uploaded_by}` : "Uploaded"}
-                    {d.created_date ? ` • ${new Date(d.created_date).toLocaleDateString()}` : ""}
+                    {d.created_at ? ` • ${new Date(d.created_at).toLocaleDateString()}` : ""}
                   </div>
                 </div>
                 {editingLink === d.id ? (
