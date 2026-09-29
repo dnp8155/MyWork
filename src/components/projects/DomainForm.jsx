@@ -23,12 +23,9 @@ export default function DomainForm({ project, expenses = [], onSaved, onClose })
   useEffect(() => {
     (async () => {
       try {
-        const res = await base44.entities.Domain.filter({}, { sort: "-created_date", limit: 200 });
-        // domains not yet linked to any project are linkable; also keep current project's for re-edit
-        const linkable = (res.items || res || []).filter(
-          (d) => !d.project_id || d.project_id === project.id
-        );
-        setAllDomains(linkable);
+        const res = await base44.entities.Domain.list("-created_date", 200);
+        const list = Array.isArray(res) ? res : (res.items || []);
+        setAllDomains(list);
       } catch (e) {
         setAllDomains([]);
       } finally {
@@ -105,7 +102,7 @@ export default function DomainForm({ project, expenses = [], onSaved, onClose })
     }
   };
 
-  const linkable = allDomains.filter((d) => !d.project_id || d.project_id === project.id);
+  const linkable = allDomains;
 
   return (
     <Modal open onClose={onClose} title="Add Domain">
@@ -117,9 +114,9 @@ export default function DomainForm({ project, expenses = [], onSaved, onClose })
 
         {mode === "existing" && (
           <Select label="Select Domain" value={selectedId} onChange={(e) => pickDomain(e.target.value)} disabled={loadingDomains}>
-            <option value="">{loadingDomains ? "Loading…" : linkable.length ? "— Choose a domain —" : "No unlinked domains available"}</option>
+            <option value="">{loadingDomains ? "Loading…" : linkable.length ? "— Choose a domain —" : "No domains found — add one from Domains page"}</option>
             {linkable.map((d) => (
-              <option key={d.id} value={d.id}>{d.domain_name}{d.registrar ? ` (${d.registrar})` : ""}</option>
+              <option key={d.id} value={d.id}>{d.domain_name}{d.registrar ? ` (${d.registrar})` : ""}{d.project_id ? " — already linked" : ""}</option>
             ))}
           </Select>
         )}
