@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadFileToSupabase } from "@/lib/supabaseClient";
 import { nextNumber, formatCurrency } from "@/lib/finance";
 import Modal from "@/components/Modal";
 import { Input, Textarea, Select } from "@/components/FormFields";
@@ -76,7 +77,7 @@ export default function ProjectForm({ clients, base44Accounts, existing, expense
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      const { file_url } = await uploadFileToSupabase(file, "uploads");
       set("logo", file_url);
     } catch (err) {
       alert("Logo upload failed: " + err.message);

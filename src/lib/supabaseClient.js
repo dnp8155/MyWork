@@ -28,3 +28,19 @@ export async function getSupabase() {
 
   return initPromise;
 }
+
+export async function uploadFileToSupabase(file, bucketName = "uploads") {
+  const sb = await getSupabase();
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+  
+  const { error } = await sb.storage.from(bucketName).upload(fileName, file, {
+    cacheControl: '3600',
+    upsert: false
+  });
+  
+  if (error) throw error;
+  
+  const { data: { publicUrl } } = sb.storage.from(bucketName).getPublicUrl(fileName);
+  return { file_url: publicUrl };
+}

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadFileToSupabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import { Upload, FileText, FileArchive, FileSpreadsheet, Download, Trash2, Link2, Copy, Check, Pencil } from "lucide-react";
 
@@ -22,7 +23,7 @@ export default function DocumentsSection({ project, documents, onChanged }) {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      const { file_url } = await uploadFileToSupabase(file, "uploads");
       let uploadedBy = "";
       try {
         const me = await base44.auth.me();

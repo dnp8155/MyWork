@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadFileToSupabase } from "@/lib/supabaseClient";
 import PageHeader from "@/components/PageHeader";
 import { Input, Textarea, Select } from "@/components/FormFields";
 import { useToast } from "@/components/ui/use-toast";
@@ -86,7 +87,7 @@ export default function Settings() {
                       if (!file) return;
                       setUploading(true);
                       try {
-                        const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+                        const { file_url } = await uploadFileToSupabase(file, "uploads");
                         set("logo", file_url);
                       } catch (err) { alert(err.message); } finally { setUploading(false); }
                     }}
