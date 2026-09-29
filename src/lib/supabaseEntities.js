@@ -21,6 +21,16 @@ const tableMap = {
   CompanySettings: "company_settings",
 };
 
+// Supabase rejects empty strings for date/timestamp/number/bool columns.
+// Convert empty strings to null so forms can omit optional fields safely.
+function cleanRecord(rec) {
+  const out = {};
+  for (const [k, v] of Object.entries(rec)) {
+    out[k] = v === "" ? null : v;
+  }
+  return out;
+}
+
 async function getUserId() {
   try {
     const sb = await getSupabase();
@@ -99,7 +109,7 @@ function makeEntity(entityName) {
     async create(record) {
       const sb = await getSupabase();
       const userId = await getUserId();
-      const payload = { ...record };
+      const payload = cleanRecord(record);
       if (userId && !payload.created_by_id) payload.created_by_id = userId;
       const { data, error } = await sb.from(table).insert(payload).select().single();
       if (error) throw error;
@@ -109,9 +119,10 @@ function makeEntity(entityName) {
     async bulkCreate(records) {
       const sb = await getSupabase();
       const userId = await getUserId();
-      const payload = records.map((r) =>
-        userId && !r.created_by_id ? { ...r, created_by_id: userId } : r
-      );
+      const payload = records.map((r) => {
+        const c = cleanRecord(r);
+        return userId && !c.created_by_id ? { ...c, created_by_id: userId } : c;
+      });
       const { data, error } = await sb.from(table).insert(payload).select();
       if (error) throw error;
       return data || [];
@@ -121,7 +132,7 @@ function makeEntity(entityName) {
       const sb = await getSupabase();
       const { data, error } = await sb
         .from(table)
-        .update(changes)
+        .update(cleanRecord(changes))
         .eq("id", id)
         .select()
         .single();
@@ -131,7 +142,7 @@ function makeEntity(entityName) {
 
     async updateMany(query, update) {
       const sb = await getSupabase();
-      const setFields = (update && update.$set) || update;
+      const setFields = cleanRecord((update && update.$set) || update);
       let q = sb.from(table).update(setFields);
       q = applyFilter(q, query);
       const { data, error } = await q;
