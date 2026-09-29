@@ -12,6 +12,8 @@ import { useToast } from "@/components/ui/use-toast";
 import CredentialForm, { CATEGORY_STYLES } from "@/components/credentials/CredentialForm";
 import TeamSection from "@/components/projects/TeamSection";
 import ProjectForm from "@/components/projects/ProjectForm";
+import DomainForm from "@/components/projects/DomainForm";
+import HostingForm from "@/components/projects/HostingForm";
 import DocumentsSection from "@/components/projects/DocumentsSection";
 import {
   ArrowLeft, Wallet, TrendingUp, TrendingDown, Clock, Percent, Users,
@@ -44,6 +46,8 @@ export default function ProjectDetail() {
   const [editingCred, setEditingCred] = useState(null);
   const [credRevealed, setCredRevealed] = useState({});
   const [editingPayment, setEditingPayment] = useState(null);
+  const [domainModal, setDomainModal] = useState(false);
+  const [hostingModal, setHostingModal] = useState(false);
   const { toast } = useToast();
 
   const project = (projects || []).find((p) => p.id === id);
@@ -75,6 +79,22 @@ export default function ProjectDetail() {
     await base44.entities.AuditLog.create({ action: "payment_deleted", entity: "Project", entity_id: id, description: `Deleted payment of ${formatCurrency(p.amount)} from ${project.name}` });
     refresh();
     toast({ title: "Payment deleted" });
+  };
+  const deleteDomain = async (d) => {
+    if (!window.confirm(`Delete domain "${d.domain_name}"?`)) return;
+    if (d.expense_id) await base44.entities.Expense.delete(d.expense_id);
+    await base44.entities.Domain.delete(d.id);
+    await base44.entities.AuditLog.create({ action: "domain_deleted", entity: "Project", entity_id: id, description: `Deleted domain ${d.domain_name} from ${project.name}` });
+    refresh();
+    toast({ title: "Domain deleted" });
+  };
+  const deleteHosting = async (h) => {
+    if (!window.confirm(`Delete hosting "${h.provider} — ${h.name}"?`)) return;
+    if (h.expense_id) await base44.entities.Expense.delete(h.expense_id);
+    await base44.entities.HostingAccount.delete(h.id);
+    await base44.entities.AuditLog.create({ action: "hosting_deleted", entity: "Project", entity_id: id, description: `Deleted hosting ${h.provider} from ${project.name}` });
+    refresh();
+    toast({ title: "Hosting deleted" });
   };
 
   return (
@@ -308,12 +328,19 @@ export default function ProjectDetail() {
       )}
 
       {tab === "domain" && (
-        <Section title="Linked Domains">
-          {projectDomains.length === 0 ? <p className="text-sm text-slate-400">No domains linked. <Link to="/domains" className="text-indigo-600">Add one →</Link></p> : (
+        <Section
+          title="Linked Domains"
+          action={
+            <button onClick={() => setDomainModal(true)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+              <Plus className="w-4 h-4" /> Add Domain
+            </button>
+          }
+        >
+          {projectDomains.length === 0 ? <p className="text-sm text-slate-400">No domains linked yet.</p> : (
             <div className="space-y-2">{projectDomains.map((d) => (
               <div key={d.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200">
-                <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-slate-400" /><div><div className="text-sm font-medium text-slate-800">{d.domain_name}</div><div className="text-xs text-slate-400">{d.registrar} • Renewal {d.renewal_date}</div></div></div>
-                <div className="flex items-center gap-3"><span className="text-sm">{formatCurrency(d.renewal_cost || d.purchase_cost)}</span><StatusBadge status={d.status} /></div>
+                <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-slate-400" /><div><div className="text-sm font-medium text-slate-800">{d.domain_name}</div><div className="text-xs text-slate-400">{d.registrar} • Renewal {d.renewal_date}{d.purchased_by === "us" ? " • We paid" : " • Client paid"}</div></div></div>
+                <div className="flex items-center gap-3"><span className="text-sm">{formatCurrency(d.renewal_cost || d.purchase_cost)}</span><StatusBadge status={d.status} /><button onClick={() => deleteDomain(d)} className="p-1.5 text-slate-400 hover:text-rose-600 rounded" title="Delete"><Trash2 className="w-4 h-4" /></button></div>
               </div>
             ))}</div>
           )}
@@ -321,12 +348,19 @@ export default function ProjectDetail() {
       )}
 
       {tab === "hosting" && (
-        <Section title="Linked Hosting">
-          {projectHosting.length === 0 ? <p className="text-sm text-slate-400">No hosting linked. <Link to="/hosting" className="text-indigo-600">Add one →</Link></p> : (
+        <Section
+          title="Linked Hosting"
+          action={
+            <button onClick={() => setHostingModal(true)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+              <Plus className="w-4 h-4" /> Add Hosting
+            </button>
+          }
+        >
+          {projectHosting.length === 0 ? <p className="text-sm text-slate-400">No hosting linked yet.</p> : (
             <div className="space-y-2">{projectHosting.map((h) => (
               <div key={h.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200">
-                <div className="flex items-center gap-2"><HardDrive className="w-4 h-4 text-slate-400" /><div><div className="text-sm font-medium text-slate-800">{h.provider} — {h.name}</div><div className="text-xs text-slate-400">{h.plan} • Renewal {h.renewal_date}</div></div></div>
-                <div className="flex items-center gap-3"><span className="text-sm">{formatCurrency(h.cost)}</span><StatusBadge status={h.status} /></div>
+                <div className="flex items-center gap-2"><HardDrive className="w-4 h-4 text-slate-400" /><div><div className="text-sm font-medium text-slate-800">{h.provider} — {h.name}</div><div className="text-xs text-slate-400">{h.plan} • Renewal {h.renewal_date}{h.purchased_by === "us" ? " • We paid" : " • Client paid"}</div></div></div>
+                <div className="flex items-center gap-3"><span className="text-sm">{formatCurrency(h.cost)}</span><StatusBadge status={h.status} /><button onClick={() => deleteHosting(h)} className="p-1.5 text-slate-400 hover:text-rose-600 rounded" title="Delete"><Trash2 className="w-4 h-4" /></button></div>
               </div>
             ))}</div>
           )}
@@ -467,6 +501,8 @@ export default function ProjectDetail() {
         />
       )}
       {expenseModal && <ExpenseModal project={project} onClose={() => setExpenseModal(false)} onSaved={() => { setExpenseModal(false); refresh(); toast({ title: "Expense added" }); }} />}
+      {domainModal && <DomainForm project={project} expenses={expenses || []} onClose={() => setDomainModal(false)} onSaved={() => { setDomainModal(false); refresh(); }} />}
+      {hostingModal && <HostingForm project={project} expenses={expenses || []} onClose={() => setHostingModal(false)} onSaved={() => { setHostingModal(false); refresh(); }} />}
     </div>
   );
 }
