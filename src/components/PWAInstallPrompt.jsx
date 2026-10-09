@@ -64,7 +64,7 @@ export default function PWAInstallPrompt() {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-md animate-in slide-in-from-bottom-6 duration-300">
+    <div className="print:hidden fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-md animate-in slide-in-from-bottom-6 duration-300">
       <div className="bg-slate-900/95 text-white backdrop-blur-xl border border-slate-700/80 shadow-[0_20px_50px_rgba(0,0,0,0.4)] rounded-2xl p-4 sm:p-5 relative overflow-hidden">
         {/* Glow effect */}
         <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />

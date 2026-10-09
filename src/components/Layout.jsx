@@ -117,7 +117,7 @@ export default function Layout() {
         </main>
 
         {/* Floating App Bottom Navigation Bar for Mobile / PWA */}
-        <div className="lg:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-md bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-[0_12px_36px_-6px_rgba(15,23,42,0.22)] rounded-2xl px-2 py-1.5 flex items-center justify-around">
+        <nav className="print:hidden lg:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-md bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-[0_12px_36px_-6px_rgba(15,23,42,0.22)] rounded-2xl px-2 py-1.5 flex items-center justify-around">
           {[
             { to: "/dashboard", label: "Home", icon: LayoutDashboard },
             { to: "/projects", label: "Projects", icon: FolderKanban },
@@ -146,7 +146,7 @@ export default function Layout() {
             <Menu className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] tracking-tight">Menu</span>
           </button>
-        </div>
+        </nav>
       </div>
     </div>
   );

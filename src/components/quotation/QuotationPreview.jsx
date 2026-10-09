@@ -1,13 +1,25 @@
-import React from "react";
+import React, { useRef } from "react";
 import { formatCurrency } from "@/lib/finance";
 import { Image } from "@/components/ui/image";
-import { X, Printer, CheckCircle2 } from "lucide-react";
+import { X, Printer, CheckCircle2, Share2 } from "lucide-react";
+import { shareOrDownloadPdf } from "@/lib/pdfUtils";
 
 export default function QuotationPreview({ quote, settings, onClose, onApprove }) {
+  const quoteCardRef = useRef(null);
   if (!quote) return null;
   const co = settings || {};
   const items = quote.items || [];
   const companyName = co.company_name || "MeWork";
+
+  const handleSharePdf = () => {
+    if (quoteCardRef.current) {
+      shareOrDownloadPdf(
+        quoteCardRef.current,
+        `Quotation_${quote.quotation_number || "Draft"}.pdf`,
+        `Quotation ${quote.quotation_number || ""}`
+      );
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-100 overflow-y-auto print:bg-white print:static print:overflow-visible">
@@ -19,6 +31,9 @@ export default function QuotationPreview({ quote, settings, onClose, onApprove }
               <CheckCircle2 className="w-4 h-4" /> Approve → Create Project & Invoice
             </button>
           )}
+          <button onClick={handleSharePdf} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+            <Share2 className="w-4 h-4" /> Share PDF
+          </button>
           <button onClick={() => window.print()} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
             <Printer className="w-4 h-4" /> Print
           </button>
@@ -26,7 +41,7 @@ export default function QuotationPreview({ quote, settings, onClose, onApprove }
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl max-w-3xl mx-auto my-6 print:border-0 print:rounded-none print:my-0 overflow-hidden">
+      <div ref={quoteCardRef} className="bg-white border border-slate-200 rounded-xl max-w-3xl mx-auto my-6 print:border-0 print:rounded-none print:my-0 overflow-hidden">
         <div className="bg-gradient-to-r from-slate-900 to-indigo-800 text-white p-6 flex items-center gap-4">
           {co.logo ? (
             <Image src={co.logo} className="h-14 w-14 rounded-lg object-contain bg-white/95" fittingType="fit" />

@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAppData } from "@/hooks/useAppData";
 import { computeInvoiceFinancials, formatCurrency } from "@/lib/finance";
-import { Printer, ArrowLeft } from "lucide-react";
+import { Printer, ArrowLeft, Share2 } from "lucide-react";
 import Watermark from "@/components/Watermark";
 import { Image } from "@/components/ui/image";
+import { shareOrDownloadPdf } from "@/lib/pdfUtils";
 
 const numberToWords = (n) => {
   n = Math.round(Number(n) || 0);
@@ -26,6 +27,7 @@ const numberToWords = (n) => {
 export default function InvoiceView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const invoiceCardRef = useRef(null);
   const { invoices, clients, projects, payments, settings, loading } = useAppData();
   const invoice = (invoices || []).find((i) => i.id === id);
   const client = (clients || []).find((c) => c.id === invoice?.client_id);
@@ -39,26 +41,44 @@ export default function InvoiceView() {
   const invPayments = (payments || []).filter((p) => p.invoice_id === invoice.id);
   const symbol = company.currency_symbol || "₹";
 
+  const handleSharePdf = () => {
+    if (invoiceCardRef.current) {
+      shareOrDownloadPdf(
+        invoiceCardRef.current,
+        `Invoice_${invoice.invoice_number || "Draft"}.pdf`,
+        `Invoice ${invoice.invoice_number || ""}`
+      );
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto pb-12 print:p-0 print:m-0 print:max-w-none">
       {/* Top Action Bar */}
-      <div className="flex items-center justify-between mb-6 print:hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 print:hidden">
         <button
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Invoices
         </button>
-        <button
-          onClick={() => window.print()}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <Printer className="w-4 h-4" /> Print / Save as PDF
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleSharePdf}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Share2 className="w-4 h-4" /> Share PDF
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Printer className="w-4 h-4" /> Print / Save as PDF
+          </button>
+        </div>
       </div>
 
       {/* Main Invoice Card Container matching mockup */}
-      <div className="relative bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden print:shadow-none print:border-0 print:rounded-none print:w-full print:bg-white print:m-0 print:p-0">
+      <div ref={invoiceCardRef} className="relative bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden print:shadow-none print:border-0 print:rounded-none print:w-full print:bg-white print:m-0 print:p-0">
         <Watermark logo={company.logo} />
 
         {/* 1. Header Banner (Dark Gradient) */}
