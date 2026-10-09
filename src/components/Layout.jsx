@@ -26,6 +26,8 @@ const navItems = [
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -37,6 +39,7 @@ export default function Layout() {
 
   return (
     <div className="h-screen bg-slate-50 flex overflow-hidden">
+      <PWAInstallPrompt />
       {/* Sidebar */}
       <aside
         className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transition-all duration-200 ${
