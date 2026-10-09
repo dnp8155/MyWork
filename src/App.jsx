@@ -106,19 +106,22 @@ const AuthenticatedApp = () => {
 };
 
 
-function App() {
+import { ConfirmProvider } from "@/components/ConfirmDialog";
 
+function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <ScrollToTop />
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
+        <ConfirmProvider>
+          <Router>
+            <ScrollToTop />
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </ConfirmProvider>
       </QueryClientProvider>
     </AuthProvider>
-  )
+  );
 }
 
 export default App

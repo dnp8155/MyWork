@@ -35,9 +35,12 @@ const TABS = [
   { key: "activity", label: "Activity" },
 ];
 
+import { useConfirm } from "@/components/ConfirmDialog";
+
 export default function ProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const { projects, clients, base44Accounts, credentials, payments, expenses, quotations, invoices, domains, hosting, recurringSchedules, auditLogs, projectMembers, projectDocuments, loading, refresh } = useAppData();
   const [tab, setTab] = useState("overview");
   const [payModal, setPayModal] = useState(false);
@@ -67,14 +70,16 @@ export default function ProjectDetail() {
   const _base44Account = (base44Accounts || []).find((a) => a.id === project.base44_account_id);
   const projectCredentials = (credentials || []).filter((c) => c.project_id === id);
   const deleteCredential = async (c) => {
-    if (!window.confirm(`Delete credential "${c.title}"?`)) return;
+    const isOk = await confirm({ title: "Delete Credential", message: `Delete credential "${c.title}"?`, confirmText: "Delete", variant: "danger" });
+    if (!isOk) return;
     await base44.entities.Credential.delete(c.id);
     await base44.entities.AuditLog.create({ action: "deleted", entity: "Credential", entity_id: c.id, description: `Deleted credential "${c.title}"` });
     refresh();
     toast({ title: "Credential deleted" });
   };
   const deletePayment = async (p) => {
-    if (!window.confirm(`Delete payment ${p.payment_number || ""} of ${formatCurrency(p.amount)}?`)) return;
+    const isOk = await confirm({ title: "Delete Payment", message: `Delete payment ${p.payment_number || ""} of ${formatCurrency(p.amount)}?`, confirmText: "Delete", variant: "danger" });
+    if (!isOk) return;
     await base44.entities.Payment.delete(p.id);
     await base44.entities.Transaction.deleteMany({ source_entity: "payment", source_id: p.id });
     await base44.entities.AuditLog.create({ action: "payment_deleted", entity: "Project", entity_id: id, description: `Deleted payment of ${formatCurrency(p.amount)} from ${project.name}` });
@@ -82,7 +87,8 @@ export default function ProjectDetail() {
     toast({ title: "Payment deleted" });
   };
   const deleteDomain = async (d) => {
-    if (!window.confirm(`Delete domain "${d.domain_name}"?`)) return;
+    const isOk = await confirm({ title: "Delete Domain", message: `Delete domain "${d.domain_name}"?`, confirmText: "Delete", variant: "danger" });
+    if (!isOk) return;
     if (d.expense_id) await base44.entities.Expense.delete(d.expense_id);
     await base44.entities.Domain.delete(d.id);
     await base44.entities.AuditLog.create({ action: "domain_deleted", entity: "Project", entity_id: id, description: `Deleted domain ${d.domain_name} from ${project.name}` });
@@ -90,7 +96,8 @@ export default function ProjectDetail() {
     toast({ title: "Domain deleted" });
   };
   const deleteHosting = async (h) => {
-    if (!window.confirm(`Delete hosting "${h.provider} — ${h.name}"?`)) return;
+    const isOk = await confirm({ title: "Delete Hosting", message: `Delete hosting "${h.provider} — ${h.name}"?`, confirmText: "Delete", variant: "danger" });
+    if (!isOk) return;
     if (h.expense_id) await base44.entities.Expense.delete(h.expense_id);
     await base44.entities.HostingAccount.delete(h.id);
     await base44.entities.AuditLog.create({ action: "hosting_deleted", entity: "Project", entity_id: id, description: `Deleted hosting ${h.provider} from ${project.name}` });
@@ -114,7 +121,13 @@ export default function ProjectDetail() {
             </button>
             <button
               onClick={async () => {
-                if (!window.confirm(`Are you sure you want to PERMANENTLY DELETE project "${project.name}"? This action cannot be undone.`)) return;
+                const isOk = await confirm({
+                  title: "Delete Project",
+                  message: `Are you sure you want to PERMANENTLY DELETE project "${project.name}"? This action cannot be undone.`,
+                  confirmText: "Delete Project",
+                  variant: "danger",
+                });
+                if (!isOk) return;
                 try {
                   await base44.entities.Project.delete(project.id);
                   await base44.entities.AuditLog.create({
@@ -125,7 +138,7 @@ export default function ProjectDetail() {
                   toast({ title: "Project deleted" });
                   navigate("/projects");
                 } catch (err) {
-                  alert(err.message);
+                  toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
                 }
               }}
               className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-rose-50 text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-100"

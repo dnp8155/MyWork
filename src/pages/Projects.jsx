@@ -12,6 +12,8 @@ import { Image } from "@/components/ui/image";
 import StatusBadge from "@/components/StatusBadge";
 import { Plus, Download, LayoutGrid, List as ListIcon, FolderKanban, Pencil, Server, Layers, Trash2 } from "lucide-react";
 
+import { useConfirm } from "@/components/ConfirmDialog";
+
 const TABS = [
   { key: "all", label: "All Projects" },
   { key: "active", label: "Active" },
@@ -29,6 +31,7 @@ export default function Projects() {
   const [clientFilter, setClientFilter] = useState("all");
   const [view, setView] = useState("grid");
   const { toast } = useToast();
+  const confirm = useConfirm();
   const navigate = useNavigate();
 
   const all = (projects || []).filter((p) => p.status !== "archived");
@@ -51,7 +54,13 @@ export default function Projects() {
     .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
 
   const archiveProject = async (p) => {
-    if (!window.confirm(`Archive project "${p.name}"?`)) return;
+    const isOk = await confirm({
+      title: "Archive Project",
+      message: `Are you sure you want to archive project "${p.name}"?`,
+      confirmText: "Archive Project",
+      variant: "warning",
+    });
+    if (!isOk) return;
     await base44.entities.Project.update(p.id, { status: "archived" });
     await base44.entities.AuditLog.create({
       action: "updated", entity: "Project", entity_id: p.id,
@@ -62,7 +71,13 @@ export default function Projects() {
   };
 
   const deleteProject = async (p) => {
-    if (!window.confirm(`Are you sure you want to PERMANENTLY DELETE project "${p.name}"? This action cannot be undone.`)) return;
+    const isOk = await confirm({
+      title: "Delete Project",
+      message: `Are you sure you want to PERMANENTLY DELETE project "${p.name}"? This action cannot be undone.`,
+      confirmText: "Delete Project",
+      variant: "danger",
+    });
+    if (!isOk) return;
     try {
       await base44.entities.Project.delete(p.id);
       await base44.entities.AuditLog.create({
@@ -72,7 +87,7 @@ export default function Projects() {
       refresh();
       toast({ title: "Project deleted successfully" });
     } catch (err) {
-      alert(err.message);
+      toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
     }
   };
 
