@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function PageHeader({ title, subtitle, actions }) {
+export default function PageHeader({ title, subtitle = null, actions = null }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
       <div>
