@@ -1,0 +1,4 @@
+{
+  "name": "supabaseConfig",
+  "entry": "entry.ts"
+}
