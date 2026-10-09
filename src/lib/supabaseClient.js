@@ -18,6 +18,13 @@ export async function getSupabase() {
     if (!url || !anonKey) throw new Error("Supabase config not available (Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY)");
     
     client = createClient(url, anonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: "mywork_auth_token",
+        storage: window.localStorage,
+      },
       realtime: { params: { eventsPerSecond: 10 } },
     });
     return client;

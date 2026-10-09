@@ -20,25 +20,28 @@ export const AuthProvider = ({ children }) => {
       try {
         const supabase = await getSupabase();
 
-        // onAuthStateChange fires INITIAL_SESSION when the client finishes
-        // recovering the session from localStorage — we wait for that
-        // before marking auth as loaded, so we don't prematurely redirect.
-        const { data } = supabase.auth.onAuthStateChange((event, session) => {
-          if (event === 'INITIAL_SESSION') {
-            if (session?.user) {
-              setUser(session.user);
-              setIsAuthenticated(true);
-            }
-            setAuthChecked(true);
-            setIsLoadingAuth(false);
-            setIsLoadingPublicSettings(false);
-          } else if (session?.user) {
-            setUser(session.user);
+        // 1. Immediately recover existing persistent session from localStorage
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+          setIsAuthenticated(true);
+        }
+        setAuthChecked(true);
+        setIsLoadingAuth(false);
+        setIsLoadingPublicSettings(false);
+
+        // 2. Listen to subsequent auth state changes (login, logout, token refresh)
+        const { data } = supabase.auth.onAuthStateChange((event, currentSession) => {
+          if (currentSession?.user) {
+            setUser(currentSession.user);
             setIsAuthenticated(true);
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
             setIsAuthenticated(false);
           }
+          setAuthChecked(true);
+          setIsLoadingAuth(false);
+          setIsLoadingPublicSettings(false);
         });
         unsubscribe = data.subscription.unsubscribe;
       } catch (error) {
