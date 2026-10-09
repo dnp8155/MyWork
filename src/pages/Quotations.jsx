@@ -12,6 +12,8 @@ import { Plus, FileText, CheckCircle2, XCircle, FileCheck, Eye, Edit3, Trash2 } 
 import QuotationPreview from "@/components/quotation/QuotationPreview";
 import { useToast } from "@/components/ui/use-toast";
 
+import { useConfirm } from "@/components/ConfirmDialog";
+
 export default function Quotations() {
   const { quotations, clients, projects, invoices: _invoices, settings, loading, refresh } = useAppData();
   const [modalOpen, setModalOpen] = useState(false);
@@ -19,20 +21,27 @@ export default function Quotations() {
   const [viewQuote, setViewQuote] = useState(null);
   const [editQuote, setEditQuote] = useState(null);
   const { toast } = useToast();
+  const confirm = useConfirm();
 
   const filtered = (quotations || []).filter((q) => filter === "all" || q.status === filter).sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
   const totalValue = (quotations || []).reduce((s, q) => s + (Number(q.total) || 0), 0);
   const approved = (quotations || []).filter((q) => q.status === "approved").length;
 
   const deleteQuote = async (q) => {
-    if (!window.confirm(`Are you sure you want to delete quotation ${q.quotation_number}?`)) return;
+    const isOk = await confirm({
+      title: "Delete Quotation",
+      message: `Are you sure you want to delete quotation ${q.quotation_number}? This action cannot be undone.`,
+      confirmText: "Delete Quotation",
+      variant: "danger",
+    });
+    if (!isOk) return;
     try {
       await base44.entities.Quotation.delete(q.id);
       await base44.entities.AuditLog.create({ action: "deleted", entity: "Quotation", entity_id: q.id, description: `Deleted quotation ${q.quotation_number}` });
       toast({ title: `Quotation ${q.quotation_number} deleted` });
       refresh();
     } catch (err) {
-      alert(err.message);
+      toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
     }
   };
 

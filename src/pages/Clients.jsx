@@ -8,14 +8,16 @@ import EmptyState from "@/components/EmptyState";
 import Modal from "@/components/Modal";
 import { Input, Textarea } from "@/components/FormFields";
 import { useNavigate } from "react-router-dom";
-import { Plus, Users, Wallet, Clock, TrendingUp } from "lucide-react";
+import { Plus, Users, Wallet, Clock, TrendingUp, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 export default function Clients() {
   const { clients, projects, payments, expenses, loading, refresh } = useAppData();
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const { toast } = useToast();
+  const confirm = useConfirm();
   const navigate = useNavigate();
 
   const filtered = (clients || []).filter((c) => !search || c.name?.toLowerCase().includes(search.toLowerCase()) || c.company_name?.toLowerCase().includes(search.toLowerCase()));
@@ -23,6 +25,24 @@ export default function Clients() {
   const totalBusiness = (clients || []).reduce((s, c) => s + computeClientFinancials(c, projects, payments, expenses).totalBusiness, 0);
   const totalReceived = (clients || []).reduce((s, c) => s + computeClientFinancials(c, projects, payments, expenses).totalReceived, 0);
   const totalPending = (clients || []).reduce((s, c) => s + computeClientFinancials(c, projects, payments, expenses).totalPending, 0);
+
+  const deleteClient = async (c) => {
+    const isOk = await confirm({
+      title: "Delete Client",
+      message: `Are you sure you want to delete client "${c.name}"? This action cannot be undone.`,
+      confirmText: "Delete Client",
+      variant: "danger",
+    });
+    if (!isOk) return;
+    try {
+      await base44.entities.Client.delete(c.id);
+      await base44.entities.AuditLog.create({ action: "deleted", entity: "Client", entity_id: c.id, description: `Deleted client ${c.name}` });
+      toast({ title: `Client ${c.name} deleted` });
+      refresh();
+    } catch (err) {
+      toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
+    }
+  };
 
   return (
     <div>
@@ -45,7 +65,16 @@ export default function Clients() {
               <div key={c.id} onClick={() => navigate(`/clients/${c.id}`)} className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition cursor-pointer">
                 <div className="flex items-start justify-between mb-3">
                   <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold">{c.name?.charAt(0)}</div>
-                  <span className="text-xs text-slate-400">{c.client_id}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400">{c.client_id}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteClient(c); }}
+                      className="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition-colors"
+                      title="Delete client"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
                 <h3 className="font-semibold text-slate-900">{c.name}</h3>
                 <p className="text-sm text-slate-500">{c.company_name || "\u2014"}</p>

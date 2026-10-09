@@ -12,6 +12,8 @@ import { Input, Select } from "@/components/FormFields";
 import { Plus, Receipt, Wallet, Clock, AlertTriangle, Eye, Edit3, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
+import { useConfirm } from "@/components/ConfirmDialog";
+
 export default function Invoices() {
   const { invoices, clients, projects, payments, loading, refresh } = useAppData();
   const [modalOpen, setModalOpen] = useState(false);
@@ -19,6 +21,7 @@ export default function Invoices() {
   const [payModal, setPayModal] = useState(null);
   const [editInvoice, setEditInvoice] = useState(null);
   const { toast } = useToast();
+  const confirm = useConfirm();
   const navigate = useNavigate();
 
   const filtered = (invoices || []).filter((i) => filter === "all" || i.status === filter).sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
@@ -27,14 +30,20 @@ export default function Invoices() {
   const totalPending = (invoices || []).reduce((s, i) => s + computeInvoiceFinancials(i, payments).pending, 0);
 
   const deleteInvoice = async (inv) => {
-    if (!window.confirm(`Are you sure you want to delete invoice ${inv.invoice_number}?`)) return;
+    const isOk = await confirm({
+      title: "Delete Invoice",
+      message: `Are you sure you want to delete invoice ${inv.invoice_number}? This action cannot be undone.`,
+      confirmText: "Delete Invoice",
+      variant: "danger",
+    });
+    if (!isOk) return;
     try {
       await base44.entities.Invoice.delete(inv.id);
       await base44.entities.AuditLog.create({ action: "deleted", entity: "Invoice", entity_id: inv.id, description: `Deleted invoice ${inv.invoice_number}` });
       toast({ title: `Invoice ${inv.invoice_number} deleted` });
       refresh();
     } catch (err) {
-      alert(err.message);
+      toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
     }
   };
 
