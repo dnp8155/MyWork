@@ -1,67 +1,97 @@
 import React, { useState, useEffect } from "react";
-import { Download, Share, SquarePlus, X, Sparkles } from "lucide-react";
+import { Download, Share, SquarePlus, X, Sparkles, Smartphone } from "lucide-react";
+import { usePWA } from "@/lib/PWAContext";
 
 export default function PWAInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isIOS, setIsIOS] = useState(false);
-  const [showPrompt, setShowPrompt] = useState(false);
+  const { isIOS, isStandalone, deferredPrompt, installApp, showIOSInstructions, setShowIOSInstructions } = usePWA();
+  const [showAutoBanner, setShowAutoBanner] = useState(false);
 
   useEffect(() => {
-    // 1. Check if app is already running as standalone PWA
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      window.navigator.standalone === true;
-
     if (isStandalone) return;
 
-    // 2. Check if user dismissed prompt recently
+    // Cooldown check for floating auto banner (3 days)
     const dismissed = localStorage.getItem("pwa_prompt_dismissed");
     if (dismissed && Date.now() - Number(dismissed) < 86400000 * 3) {
-      // 3 days cooldown
       return;
     }
 
-    // 3. Detect iOS Safari
-    const ua = window.navigator.userAgent;
-    const isIosDevice = /iphone|ipad|ipod/i.test(ua);
-    const isSafari = /safari/i.test(ua) && !/chrome|crios|fxios/i.test(ua);
-
-    if (isIosDevice && isSafari) {
-      setIsIOS(true);
-      setShowPrompt(true);
+    // Auto show if prompt is ready or if it's iOS Safari
+    if (deferredPrompt || isIOS) {
+      const timer = setTimeout(() => {
+        setShowAutoBanner(true);
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-
-    // 4. Android / Chrome / Desktop PWA prompt listener
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowPrompt(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") {
-        setShowPrompt(false);
-      }
-      setDeferredPrompt(null);
-    }
-  };
+  }, [isStandalone, deferredPrompt, isIOS]);
 
   const handleDismiss = () => {
-    setShowPrompt(false);
+    setShowAutoBanner(false);
+    setShowIOSInstructions(false);
     localStorage.setItem("pwa_prompt_dismissed", String(Date.now()));
   };
 
-  if (!showPrompt) return null;
+  const handleInstallClick = async () => {
+    await installApp();
+    setShowAutoBanner(false);
+  };
+
+  // 1. Manual / iOS Instructions Modal (when clicked from sidebar or iOS prompt)
+  if (showIOSInstructions) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="bg-slate-900 text-white border border-slate-700/80 rounded-2xl max-w-sm w-full p-5 relative shadow-2xl">
+          <button
+            onClick={() => setShowIOSInstructions(false)}
+            className="absolute top-3.5 right-3.5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+              <Smartphone className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-base">Install App</h3>
+              <p className="text-xs text-slate-400">Fast 1-tap mobile experience</p>
+            </div>
+          </div>
+
+          {isIOS ? (
+            <div className="space-y-3 text-xs text-slate-300 mt-3 bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/50">
+              <p className="font-medium text-slate-200">Follow these 2 simple steps:</p>
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">1</span>
+                <span>Tap the <strong className="text-white">Share</strong> button <Share className="inline w-3.5 h-3.5 text-indigo-400 mx-0.5" /> at the bottom of Safari.</span>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">2</span>
+                <span>Scroll down and select <strong className="text-white">"Add to Home Screen"</strong> <SquarePlus className="inline w-3.5 h-3.5 text-indigo-400 mx-0.5" />.</span>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2 text-xs text-slate-300 mt-3 bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
+              <p>
+                In your mobile browser (Chrome/Edge/Brave), open the browser menu (<strong className="text-white">⋮</strong>) and tap <strong className="text-indigo-400">"Install App"</strong> or <strong className="text-indigo-400">"Add to Home screen"</strong>.
+              </p>
+            </div>
+          )}
+
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => setShowIOSInstructions(false)}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md transition"
+            >
+              Understood
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Auto popup banner
+  if (!showAutoBanner || isStandalone) return null;
 
   return (
     <div className="print:hidden fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-md animate-in slide-in-from-bottom-6 duration-300">
@@ -98,7 +128,7 @@ export default function PWAInstallPrompt() {
               </p>
             ) : (
               <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                Install on your mobile or desktop home screen for quick 1-tap full screen access.
+                Install on your mobile home screen for quick 1-tap full screen access and offline view.
               </p>
             )}
           </div>

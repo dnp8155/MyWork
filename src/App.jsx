@@ -107,19 +107,22 @@ const AuthenticatedApp = () => {
 
 
 import { ConfirmProvider } from "@/components/ConfirmDialog";
+import { PWAProvider } from "@/lib/PWAContext";
 
 function App() {
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <ConfirmProvider>
-          <Router>
-            <ScrollToTop />
-            <AuthenticatedApp />
-          </Router>
-          <Toaster />
-        </ConfirmProvider>
-      </QueryClientProvider>
+      <PWAProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <ConfirmProvider>
+            <Router>
+              <ScrollToTop />
+              <AuthenticatedApp />
+            </Router>
+            <Toaster />
+          </ConfirmProvider>
+        </QueryClientProvider>
+      </PWAProvider>
     </AuthProvider>
   );
 }
