@@ -1,5 +1,5 @@
-// PWA Service Worker with Stale-While-Revalidate and Static Asset Cache
-const CACHE_NAME = 'mywork-cache-v2';
+// PWA Service Worker with Network-First for HTML navigation and Cache-First for static assets
+const CACHE_NAME = 'mywork-cache-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -36,32 +36,34 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Don't cache Supabase/Base44 backend API calls or cross-origin POST/PATCH
+  // Don't intercept Supabase/backend API calls or cross-origin
   if (url.origin !== self.location.origin) {
     return;
   }
 
-  // Static files and scripts: stale-while-revalidate or cache-first
+  // HTML navigation (SPA routes like /projects/..., /dashboard): ALWAYS NETWORK-FIRST
+  // Prevents blank screen on route change / fresh tabs
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // Static assets (CSS/JS/images)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          // If offline and request is an HTML navigation, serve index.html
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
-        });
-
-      return cachedResponse || fetchPromise;
+      if (cachedResponse) return cachedResponse;
+      return fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      });
     })
   );
 });
