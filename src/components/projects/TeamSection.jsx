@@ -5,7 +5,9 @@ import Modal from "@/components/Modal";
 import StatCard from "@/components/StatCard";
 import { Input, Select, Textarea } from "@/components/FormFields";
 import { useToast } from "@/components/ui/use-toast";
-import { Users, UserPlus, Wallet, Banknote, Trash2, CheckCircle2, Copy, Check, Share2, Mail, MessageSquare } from "lucide-react";
+import { Users, UserPlus, Wallet, Banknote, Trash2, CheckCircle2, Copy, Check, Share2, Mail, MessageSquare, Send } from "lucide-react";
+import { sendProjectInvitationEmail } from "@/lib/emailService";
+import { useAuth } from "@/lib/AuthContext";
 
 const ROLES = ["owner", "manager", "developer", "designer", "other"];
 
@@ -146,7 +148,9 @@ export default function TeamSection({ project, members, onChanged }) {
 
 function InviteModal({ project, onClose, onSaved }) {
   const [form, setForm] = useState({ name: "", email: "", role: "developer", salary_type: "monthly", salary_amount: "", notes: "" });
+  const { user } = useAuth();
   const [saving, setSaving] = useState(false);
+  const [emailStatus, setEmailStatus] = useState("");
   const [invitedData, setInvitedData] = useState(null);
   const [copied, setCopied] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -173,7 +177,26 @@ function InviteModal({ project, onClose, onSaved }) {
         description: `Invited ${form.name} (${form.role}) to ${project.name}`,
       });
 
-      // Instead of closing immediately, show easy share actions (Email / WhatsApp / Copy)
+      // Trigger background direct email delivery
+      if (form.email) {
+        setEmailStatus("sending");
+        sendProjectInvitationEmail({
+          toEmail: form.email,
+          toName: form.name,
+          projectName: project.name,
+          projectId: project.id,
+          inviterName: user?.user_metadata?.full_name || user?.email || "Workspace Owner"
+        }).then(res => {
+          if (res.success) {
+            setEmailStatus("sent");
+          } else {
+            setEmailStatus("fallback");
+          }
+        }).catch(() => {
+          setEmailStatus("fallback");
+        });
+      }
+
       setInvitedData({ name: form.name, email: form.email, role: form.role });
     } catch (err) {
       alert(err.message || "Failed to add member");

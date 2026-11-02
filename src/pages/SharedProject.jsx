@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { getSupabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/lib/AuthContext";
 import { computeProjectFinancials, formatCurrency } from "@/lib/finance";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import TeamSection from "@/components/projects/TeamSection";
 import DocumentsSection from "@/components/projects/DocumentsSection";
-import { ArrowLeft, Settings2, Calendar } from "lucide-react";
+import { ArrowLeft, Settings2, Calendar, LogIn, UserPlus } from "lucide-react";
 
 export default function SharedProject() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const { isAuthenticated, isLoadingAuth } = useAuth();
+
   const [project, setProject] = useState(null);
   const [members, setMembers] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -17,6 +21,8 @@ export default function SharedProject() {
   const [payments, setPayments] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const invitedEmail = searchParams.get("invitedEmail");
 
   const loadData = async () => {
     try {
@@ -54,7 +60,7 @@ export default function SharedProject() {
     loadData();
   }, [id]);
 
-  if (loading) return <div className="h-64 bg-slate-100 rounded-xl animate-pulse" />;
+  if (loading || isLoadingAuth) return <div className="h-64 bg-slate-100 rounded-xl animate-pulse" />;
   if (!project) return (
     <div className="text-center py-16">
       <p className="text-slate-500">Project not found.</p>
@@ -62,13 +68,40 @@ export default function SharedProject() {
     </div>
   );
 
+  const returnUrl = encodeURIComponent(`/projects/${id}/shared`);
   const f = computeProjectFinancials(project, payments, expenses);
   const activeMembers = (members || []).filter((m) => m.status !== "removed");
   const projectSchedules = [...(schedules || [])].sort((a, b) => (a.due_date || "").localeCompare(b.due_date || ""));
-  const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" }) : "\u2014");
+  const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" }) : "—");
 
   return (
     <div>
+      {/* If user is not logged in, show an invite banner to Login or Register */}
+      {!isAuthenticated && (
+        <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-600 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+          <div>
+            <h3 className="font-semibold text-base">You are viewing a Shared Workspace</h3>
+            <p className="text-xs text-indigo-100">
+              Log in or create a free account to join the team and collaborate on this project.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              to={`/login?returnTo=${returnUrl}${invitedEmail ? `&email=${encodeURIComponent(invitedEmail)}` : ""}`}
+              className="px-3.5 py-1.5 text-xs bg-white text-indigo-700 font-semibold rounded-lg hover:bg-indigo-50 flex items-center gap-1.5 shadow"
+            >
+              <LogIn className="w-3.5 h-3.5" /> Log in
+            </Link>
+            <Link
+              to={`/register?returnTo=${returnUrl}${invitedEmail ? `&email=${encodeURIComponent(invitedEmail)}` : ""}`}
+              className="px-3.5 py-1.5 text-xs bg-indigo-700 text-white font-semibold rounded-lg hover:bg-indigo-800 border border-indigo-400 flex items-center gap-1.5 shadow"
+            >
+              <UserPlus className="w-3.5 h-3.5" /> Register
+            </Link>
+          </div>
+        </div>
+      )}
+
       <Link to={`/projects/${id}`} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-3">
         <ArrowLeft className="w-4 h-4" /> Back to Project
       </Link>
@@ -90,7 +123,7 @@ export default function SharedProject() {
           <h3 className="text-sm font-semibold text-slate-700 mb-3">Project Overview</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div><p className="text-xs text-slate-400">Project Name</p><p className="text-slate-800">{project.name}</p></div>
-            <div><p className="text-xs text-slate-400">Client</p><p className="text-slate-800">{project.client_name || "\u2014"}</p></div>
+            <div><p className="text-xs text-slate-400">Client</p><p className="text-slate-800">{project.client_name || "—"}</p></div>
             <div><p className="text-xs text-slate-400">Type</p><p className="text-slate-800 capitalize">{project.project_type === "recurring" ? "Recurring / Salary based" : "Fixed price"}</p></div>
             <div className="flex items-start gap-1.5">
               <Calendar className="w-4 h-4 text-slate-400 mt-0.5" />
