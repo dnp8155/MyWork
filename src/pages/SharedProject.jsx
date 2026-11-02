@@ -7,7 +7,11 @@ import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import TeamSection from "@/components/projects/TeamSection";
 import DocumentsSection from "@/components/projects/DocumentsSection";
-import { ArrowLeft, Settings2, Calendar, LogIn, UserPlus } from "lucide-react";
+import { 
+  ArrowLeft, Settings2, Calendar, LogIn, UserPlus, 
+  Briefcase, Building2, Layers, CheckCircle2, DollarSign,
+  TrendingUp, Clock
+} from "lucide-react";
 
 export default function SharedProject() {
   const { id } = useParams();
@@ -60,13 +64,32 @@ export default function SharedProject() {
     loadData();
   }, [id]);
 
-  if (loading || isLoadingAuth) return <div className="h-64 bg-slate-100 rounded-xl animate-pulse" />;
-  if (!project) return (
-    <div className="text-center py-16">
-      <p className="text-slate-500">Project not found.</p>
-      <Link to="/projects" className="text-indigo-600 text-sm">← Back to Projects</Link>
-    </div>
-  );
+  if (loading || isLoadingAuth) {
+    return (
+      <div className="space-y-4 max-w-7xl mx-auto py-6">
+        <div className="h-8 w-40 bg-slate-200/70 rounded-lg animate-pulse" />
+        <div className="h-44 bg-slate-100 rounded-2xl animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="h-32 bg-slate-100 rounded-2xl animate-pulse" />
+          <div className="h-32 bg-slate-100 rounded-2xl animate-pulse" />
+          <div className="h-32 bg-slate-100 rounded-2xl animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-sm max-w-xl mx-auto mt-10">
+        <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+        <h3 className="text-lg font-bold text-slate-800">Project Not Found</h3>
+        <p className="text-slate-500 text-sm mt-1 mb-6">This project link may be private or has been moved.</p>
+        <Link to="/projects" className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition">
+          Return to Projects
+        </Link>
+      </div>
+    );
+  }
 
   const returnUrl = encodeURIComponent(`/projects/${id}/shared`);
   const f = computeProjectFinancials(project, payments, expenses);
@@ -75,110 +98,112 @@ export default function SharedProject() {
   const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" }) : "—");
 
   return (
-    <div>
-      {/* If user is not logged in, show an invite banner to Login or Register */}
+    <div className="max-w-7xl mx-auto space-y-6 pb-12">
+      {/* Guest Invitation Banner */}
       {!isAuthenticated && (
-        <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-600 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-          <div>
-            <h3 className="font-semibold text-base">You are viewing a Shared Workspace</h3>
-            <p className="text-xs text-indigo-100">
-              Log in or create a free account to join the team and collaborate on this project.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Link
-              to={`/login?returnTo=${returnUrl}${invitedEmail ? `&email=${encodeURIComponent(invitedEmail)}` : ""}`}
-              className="px-3.5 py-1.5 text-xs bg-white text-indigo-700 font-semibold rounded-lg hover:bg-indigo-50 flex items-center gap-1.5 shadow"
-            >
-              <LogIn className="w-3.5 h-3.5" /> Log in
-            </Link>
-            <Link
-              to={`/register?returnTo=${returnUrl}${invitedEmail ? `&email=${encodeURIComponent(invitedEmail)}` : ""}`}
-              className="px-3.5 py-1.5 text-xs bg-indigo-700 text-white font-semibold rounded-lg hover:bg-indigo-800 border border-indigo-400 flex items-center gap-1.5 shadow"
-            >
-              <UserPlus className="w-3.5 h-3.5" /> Register
-            </Link>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 p-6 text-white shadow-xl">
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-2">
+                🌟 Shared Project Workspace
+              </span>
+              <h2 className="text-xl font-bold tracking-tight">You've been invited to collaborate!</h2>
+              <p className="text-sm text-slate-300 mt-1 max-w-xl">
+                Sign in or register to upload project documents, view team payouts, and stay in sync with the workspace.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                to={`/login?returnTo=${returnUrl}${invitedEmail ? `&email=${encodeURIComponent(invitedEmail)}` : ""}`}
+                className="px-4 py-2 text-sm bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl font-medium transition flex items-center gap-2"
+              >
+                <LogIn className="w-4 h-4" /> Log In
+              </Link>
+              <Link
+                to={`/register?returnTo=${returnUrl}${invitedEmail ? `&email=${encodeURIComponent(invitedEmail)}` : ""}`}
+                className="px-5 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center gap-2"
+              >
+                <UserPlus className="w-4 h-4" /> Register & Join
+              </Link>
+            </div>
           </div>
         </div>
       )}
 
-      <Link to={`/projects/${id}`} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-3">
-        <ArrowLeft className="w-4 h-4" /> Back to Project
-      </Link>
-      <PageHeader
-        title={project.name}
-        subtitle={`${project.project_number} • ${project.client_name || "No client"} • Shared workspace`}
-        actions={
-          <div className="flex items-center gap-2">
-            <StatusBadge status={project.status} />
-            <Link to={`/projects/${id}`} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
-              <Settings2 className="w-4 h-4" /> Manage Project
-            </Link>
-          </div>
-        }
-      />
+      {/* Top Header Card */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+        <Link to={`/projects/${id}`} className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 mb-4 transition">
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Project
+        </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-700 mb-3">Project Overview</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            <div><p className="text-xs text-slate-400">Project Name</p><p className="text-slate-800">{project.name}</p></div>
-            <div><p className="text-xs text-slate-400">Client</p><p className="text-slate-800">{project.client_name || "—"}</p></div>
-            <div><p className="text-xs text-slate-400">Type</p><p className="text-slate-800 capitalize">{project.project_type === "recurring" ? "Recurring / Salary based" : "Fixed price"}</p></div>
-            <div className="flex items-start gap-1.5">
-              <Calendar className="w-4 h-4 text-slate-400 mt-0.5" />
-              <p className="text-slate-700">{fmtDate(project.start_date)} → {fmtDate(project.expected_completion_date || project.recurring_end_date)}</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">{project.name}</h1>
+              <StatusBadge status={project.status} />
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-500 mt-1.5 font-medium">
+              <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-600">{project.project_number}</span>
+              <span>•</span>
+              <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5 text-slate-400" /> {project.client_name || "General Project"}</span>
+              <span>•</span>
+              <span className="text-indigo-600 font-semibold">Shared Workspace</span>
             </div>
           </div>
-          {project.description && <p className="text-sm text-slate-600 mt-3">{project.description}</p>}
-          {project.project_type === "recurring" && (
-            <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <span className="px-2 py-1 rounded bg-slate-100 text-slate-600">{formatCurrency(project.monthly_amount)} / month</span>
-              <span className="px-2 py-1 rounded bg-slate-100 text-slate-600">{project.number_of_months} months</span>
-            </div>
-          )}
+
+          <Link
+            to={`/projects/${id}`}
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition"
+          >
+            <Settings2 className="w-4 h-4 text-slate-500" /> Manage Project
+          </Link>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-700 mb-3">Financials</h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-slate-500">Project Value</span><span className="font-medium">{formatCurrency(f.value)}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">Received</span><span className="font-medium text-emerald-600">{formatCurrency(f.received)}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">Pending</span><span className="font-medium text-amber-600">{formatCurrency(f.pending)}</span></div>
+
+        {/* Quick Info Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-5">
+          <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100">
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Billing Model</span>
+            <span className="text-sm font-semibold text-slate-800 capitalize mt-0.5 block">
+              {project.project_type === "recurring" ? "Recurring / Monthly" : "Fixed Price"}
+            </span>
+          </div>
+          <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100">
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Timeline</span>
+            <span className="text-sm font-semibold text-slate-800 mt-0.5 flex items-center gap-1.5 truncate">
+              <Calendar className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
+              {fmtDate(project.start_date)}
+            </span>
+          </div>
+          <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100">
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Total Value</span>
+            <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+              {formatCurrency(f.value)}
+            </span>
+          </div>
+          <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100">
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Received / Pending</span>
+            <div className="flex items-center gap-2 mt-0.5 text-sm font-bold">
+              <span className="text-emerald-600">{formatCurrency(f.received)}</span>
+              <span className="text-slate-300">/</span>
+              <span className="text-amber-600">{formatCurrency(f.pending)}</span>
+            </div>
           </div>
         </div>
+
+        {project.description && (
+          <p className="text-sm text-slate-600 bg-slate-50/50 p-3.5 rounded-xl border border-slate-100 mt-4 leading-relaxed">
+            {project.description}
+          </p>
+        )}
       </div>
 
-      {project.project_type === "recurring" && projectSchedules.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 overflow-x-auto">
-          <h3 className="text-sm font-semibold text-slate-700 mb-3">Recurring Payment Schedule</h3>
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50"><tr>
-              <th className="text-left px-3 py-2 font-medium text-slate-600">#</th>
-              <th className="text-left px-3 py-2 font-medium text-slate-600">Due Date</th>
-              <th className="text-right px-3 py-2 font-medium text-slate-600">Amount</th>
-              <th className="text-left px-3 py-2 font-medium text-slate-600">Status</th>
-            </tr></thead>
-            <tbody className="divide-y divide-slate-100">
-              {projectSchedules.map((s) => (
-                <tr key={s.id}>
-                  <td className="px-3 py-2 text-slate-500">{s.installment_number}</td>
-                  <td className="px-3 py-2">{s.due_date}</td>
-                  <td className="px-3 py-2 text-right">{formatCurrency(s.amount)}</td>
-                  <td className="px-3 py-2"><StatusBadge status={s.status} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      <div className="mb-4">
-        <h2 className="text-base font-semibold text-slate-800 mb-3">Team & Salaries</h2>
+      {/* Team & Member Section */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
         <TeamSection project={project} members={activeMembers} onChanged={loadData} />
       </div>
 
-      <div>
-        <h2 className="text-base font-semibold text-slate-800 mb-3">Documents</h2>
+      {/* Documents Section */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
         <DocumentsSection project={project} documents={documents} onChanged={loadData} />
       </div>
     </div>
