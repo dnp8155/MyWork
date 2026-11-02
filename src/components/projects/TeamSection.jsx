@@ -5,7 +5,7 @@ import Modal from "@/components/Modal";
 import StatCard from "@/components/StatCard";
 import { Input, Select, Textarea } from "@/components/FormFields";
 import { useToast } from "@/components/ui/use-toast";
-import { Users, UserPlus, Wallet, Banknote, Trash2, CheckCircle2, Copy, Check, Share2 } from "lucide-react";
+import { Users, UserPlus, Wallet, Banknote, Trash2, CheckCircle2, Copy, Check, Share2, Mail, MessageSquare } from "lucide-react";
 
 const ROLES = ["owner", "manager", "developer", "designer", "other"];
 
@@ -147,7 +147,11 @@ export default function TeamSection({ project, members, onChanged }) {
 function InviteModal({ project, onClose, onSaved }) {
   const [form, setForm] = useState({ name: "", email: "", role: "developer", salary_type: "monthly", salary_amount: "", notes: "" });
   const [saving, setSaving] = useState(false);
+  const [invitedData, setInvitedData] = useState(null);
+  const [copied, setCopied] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const shareUrl = `${window.location.origin}/projects/${project.id}/shared`;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -169,13 +173,91 @@ function InviteModal({ project, onClose, onSaved }) {
         description: `Invited ${form.name} (${form.role}) to ${project.name}`,
       });
 
-      onSaved();
+      // Instead of closing immediately, show easy share actions (Email / WhatsApp / Copy)
+      setInvitedData({ name: form.name, email: form.email, role: form.role });
     } catch (err) {
       alert(err.message || "Failed to add member");
     } finally {
       setSaving(false);
     }
   };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleSendEmail = () => {
+    const subject = encodeURIComponent(`Invitation to join project: ${project.name}`);
+    const body = encodeURIComponent(
+      `Hi ${invitedData?.name || "there"},\n\nYou have been invited to join the project "${project.name}" as a ${invitedData?.role || "team member"}.\n\nAccess the shared project workspace here:\n${shareUrl}\n\nBest regards,\nMyWork Team`
+    );
+    window.open(`mailto:${invitedData?.email || ""}?subject=${subject}&body=${body}`, "_blank");
+  };
+
+  const handleSendWhatsApp = () => {
+    const text = encodeURIComponent(
+      `Hi ${invitedData?.name || ""}, you've been invited to join project *${project.name}* on MyWork.\n\nOpen project workspace: ${shareUrl}`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+  };
+
+  if (invitedData) {
+    return (
+      <Modal open onClose={() => { onSaved(); }} title="Member Invited Successfully! 🎉">
+        <div className="space-y-4 py-2">
+          <p className="text-sm text-slate-600">
+            <strong>{invitedData.name}</strong> has been added as a <strong>{invitedData.role}</strong>. Share the project link directly via Email or WhatsApp:
+          </p>
+
+          <div className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+            <input
+              type="text"
+              readOnly
+              value={shareUrl}
+              className="text-xs text-slate-600 bg-transparent flex-1 outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="text-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded font-medium hover:bg-slate-50 flex items-center gap-1"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <button
+              type="button"
+              onClick={handleSendEmail}
+              className="inline-flex items-center justify-center gap-2 px-3 py-2 text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg font-medium transition"
+            >
+              <Mail className="w-4 h-4" /> Send Email
+            </button>
+            <button
+              type="button"
+              onClick={handleSendWhatsApp}
+              className="inline-flex items-center justify-center gap-2 px-3 py-2 text-sm bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-medium transition"
+            >
+              <MessageSquare className="w-4 h-4" /> WhatsApp
+            </button>
+          </div>
+
+          <div className="flex justify-end pt-3">
+            <button
+              type="button"
+              onClick={() => onSaved()}
+              className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal open onClose={onClose} title="Invite Team Member">
@@ -196,10 +278,10 @@ function InviteModal({ project, onClose, onSaved }) {
           <Input label="Amount (₹)" type="number" value={form.salary_amount} onChange={(e) => set("salary_amount", e.target.value)} />
         </div>
         <Textarea label="Notes" value={form.notes} onChange={(e) => set("notes", e.target.value)} />
-        <p className="text-xs text-slate-400">The member will be invited to the app by email and added to this shared project.</p>
+        <p className="text-xs text-slate-400">The member will be added to this project with salary and document access.</p>
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-          <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg disabled:opacity-50">{saving ? "Inviting…" : "Send Invite"}</button>
+          <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg disabled:opacity-50">{saving ? "Inviting…" : "Save & Invite"}</button>
         </div>
       </form>
     </Modal>
