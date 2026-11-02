@@ -5,6 +5,8 @@ import Modal from "@/components/Modal";
 import StatCard from "@/components/StatCard";
 import { Input, Select, Textarea } from "@/components/FormFields";
 import { useToast } from "@/components/ui/use-toast";
+import { useConfirm } from "@/components/ConfirmDialog";
+import { Loader2 } from "lucide-react";
 import { Users, UserPlus, Wallet, Banknote, Trash2, CheckCircle2, Copy, Check, Share2, Mail, MessageSquare, Send } from "lucide-react";
 import { sendProjectInvitationEmail } from "@/lib/emailService";
 import { useAuth } from "@/lib/AuthContext";
@@ -21,6 +23,7 @@ export default function TeamSection({ project, members, onChanged }) {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+  const confirm = useConfirm();
 
   const active = (members || []).filter((m) => m.status !== "removed");
   const monthlyPayout = active.filter((m) => m.salary_type === "monthly").reduce((s, m) => s + (Number(m.salary_amount) || 0), 0);
@@ -35,7 +38,14 @@ export default function TeamSection({ project, members, onChanged }) {
   };
 
   const removeMember = async (m) => {
-    if (!window.confirm(`Remove "${m.name}" from this project?`)) return;
+    const ok = await confirm({
+      title: "Remove Team Member",
+      message: `Are you sure you want to remove "${m.name}" from this project? They will lose access to documents and updates.`,
+      confirmText: "Remove Member",
+      cancelText: "Cancel",
+      variant: "danger"
+    });
+    if (!ok) return;
     await base44.entities.ProjectMember.update(m.id, { status: "removed" });
     await base44.entities.AuditLog.create({
       action: "updated", entity: "ProjectMember", entity_id: m.id,
@@ -284,27 +294,108 @@ function InviteModal({ project, onClose, onSaved }) {
 
   return (
     <Modal open onClose={onClose} title="Invite Team Member">
-      <form onSubmit={submit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <Input label="Name" required value={form.name} onChange={(e) => set("name", e.target.value)} />
-          <Input label="Email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
+      <form onSubmit={submit} className="space-y-4 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name *</label>
+            <input
+              required
+              placeholder="e.g. Rahul Sharma"
+              value={form.name}
+              onChange={(e) => set("name", e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address *</label>
+            <input
+              required
+              type="email"
+              placeholder="rahul@example.com"
+              value={form.email}
+              onChange={(e) => set("email", e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+            />
+          </div>
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          <Select label="Role" value={form.role} onChange={(e) => set("role", e.target.value)}>
-            {ROLES.map((r) => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
-          </Select>
-          <Select label="Salary Type" value={form.salary_type} onChange={(e) => set("salary_type", e.target.value)}>
-            <option value="monthly">Monthly</option>
-            <option value="per_project">Per Project</option>
-            <option value="none">Unpaid / None</option>
-          </Select>
-          <Input label="Amount (₹)" type="number" value={form.salary_amount} onChange={(e) => set("salary_amount", e.target.value)} />
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Project Role</label>
+            <select
+              value={form.role}
+              onChange={(e) => set("role", e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition capitalize"
+            >
+              {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Salary Type</label>
+            <select
+              value={form.salary_type}
+              onChange={(e) => set("salary_type", e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+            >
+              <option value="monthly">Monthly</option>
+              <option value="per_project">Per Project</option>
+              <option value="none">Unpaid / Free</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Amount (₹)</label>
+            <input
+              type="number"
+              placeholder="0"
+              value={form.salary_amount}
+              onChange={(e) => set("salary_amount", e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+            />
+          </div>
         </div>
-        <Textarea label="Notes" value={form.notes} onChange={(e) => set("notes", e.target.value)} />
-        <p className="text-xs text-slate-400">The member will be added to this project with salary and document access.</p>
-        <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-          <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg disabled:opacity-50">{saving ? "Inviting…" : "Save & Invite"}</button>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">Notes / Scope (Optional)</label>
+          <textarea
+            rows={2}
+            placeholder="Responsibilities or task details..."
+            value={form.notes}
+            onChange={(e) => set("notes", e.target.value)}
+            className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition resize-none"
+          />
+        </div>
+
+        <div className="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl flex items-center gap-2.5">
+          <Send className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+          <p className="text-xs text-indigo-900 leading-relaxed">
+            Member will get access to documents, tasks and salary records. An invite link will be prepared instantly.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-5 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm shadow-indigo-200 disabled:opacity-50 transition inline-flex items-center gap-2"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Adding Member...
+              </>
+            ) : (
+              <>
+                Save & Invite
+              </>
+            )}
+          </button>
         </div>
       </form>
     </Modal>
