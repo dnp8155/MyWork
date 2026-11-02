@@ -5,7 +5,7 @@ import Modal from "@/components/Modal";
 import StatCard from "@/components/StatCard";
 import { Input, Select, Textarea } from "@/components/FormFields";
 import { useToast } from "@/components/ui/use-toast";
-import { Users, UserPlus, Wallet, Banknote, Trash2, CheckCircle2 } from "lucide-react";
+import { Users, UserPlus, Wallet, Banknote, Trash2, CheckCircle2, Copy, Check, Share2 } from "lucide-react";
 
 const ROLES = ["owner", "manager", "developer", "designer", "other"];
 
@@ -17,11 +17,20 @@ export const salaryText = (m) => {
 
 export default function TeamSection({ project, members, onChanged }) {
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
   const active = (members || []).filter((m) => m.status !== "removed");
   const monthlyPayout = active.filter((m) => m.salary_type === "monthly").reduce((s, m) => s + (Number(m.salary_amount) || 0), 0);
   const projectPayout = active.filter((m) => m.salary_type === "per_project").reduce((s, m) => s + (Number(m.salary_amount) || 0), 0);
+
+  const copyShareLink = () => {
+    const link = `${window.location.origin}/projects/${project.id}/shared`;
+    navigator.clipboard.writeText(link);
+    setCopied(true);
+    toast({ title: "Link copied to clipboard!", description: "Share this link with your team member." });
+    setTimeout(() => setCopied(false), 3000);
+  };
 
   const removeMember = async (m) => {
     if (!window.confirm(`Remove "${m.name}" from this project?`)) return;
@@ -44,9 +53,23 @@ export default function TeamSection({ project, members, onChanged }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm text-slate-500">Everyone working on this shared project, with salary and payout details per member.</p>
-        <button onClick={() => setInviteOpen(true)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-          <UserPlus className="w-4 h-4" /> Invite Member
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={copyShareLink}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-slate-300 text-slate-700 bg-white rounded-lg hover:bg-slate-50 transition"
+          >
+            {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-slate-500" />}
+            {copied ? "Copied Link" : "Copy Project Link"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setInviteOpen(true)}
+            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+          >
+            <UserPlus className="w-4 h-4" /> Invite Member
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -138,16 +161,17 @@ function InviteModal({ project, onClose, onSaved }) {
         client_id: project.client_id,
         status: "invited",
       });
-      if (form.email) {
-        try { await base44.users.inviteUser(form.email, "user"); } catch { /* may already be registered */ }
-      }
+
       await base44.entities.AuditLog.create({
-        action: "created", entity: "ProjectMember", entity_id: project.id,
+        action: "created",
+        entity: "ProjectMember",
+        entity_id: project.id,
         description: `Invited ${form.name} (${form.role}) to ${project.name}`,
       });
+
       onSaved();
     } catch (err) {
-      alert(err.message);
+      alert(err.message || "Failed to add member");
     } finally {
       setSaving(false);
     }
