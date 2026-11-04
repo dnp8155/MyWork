@@ -53,6 +53,20 @@ export default function SharedProject() {
       setSchedules(scheds || []);
       setPayments(pays || []);
       setExpenses(exps || []);
+
+      // If logged in user is an invited member, auto-accept and link member
+      if (user?.email && mems && mems.length > 0) {
+        const myInvite = mems.find(
+          (m) => m.email && m.email.toLowerCase() === user.email.toLowerCase()
+        );
+        if (myInvite && myInvite.status === "invited") {
+          await sb.from("project_members").update({ status: "active" }).eq("id", myInvite.id);
+          // Update local state
+          setMembers((prev) =>
+            prev.map((m) => (m.id === myInvite.id ? { ...m, status: "active" } : m))
+          );
+        }
+      }
     } catch (err) {
       console.error("Failed to load shared project:", err);
     } finally {
